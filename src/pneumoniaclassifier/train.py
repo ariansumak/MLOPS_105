@@ -28,10 +28,9 @@ class DataConfig:
 
 @dataclass
 class ModelConfig:
-    """Configuration for the model architecture."""
+    """Configuration for the model architecture and training."""
 
-    _target_: str = "pneumoniaclassifier.train._build_model"
-    model_name: str = "efficientnet_b0"
+    name: str = "efficientnet_b0"
     num_classes: int = 2
     pretrained: bool = True
     unfreeze_blocks: int = 0
@@ -195,7 +194,11 @@ def train(cfg: DictConfig) -> None:
 
     train_loader, val_loader, _ = hydra.utils.instantiate(cfg.data)
 
-    model = hydra.utils.instantiate(cfg.model)
+    model = _build_model(
+        model_name=cfg.model.name,
+        num_classes=cfg.model.num_classes,
+        pretrained=cfg.model.pretrained,
+    )
     _set_trainable_layers(model, cfg.model.unfreeze_blocks)
     model.to(device)
 
@@ -235,7 +238,7 @@ def train(cfg: DictConfig) -> None:
             if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
                 batch_acc = (preds == targets).float().mean().item()
                 if cfg.wandb.enabled:
-                    import wandb
+                    # import wandb
 
                     wandb.log(
                         {
@@ -249,7 +252,7 @@ def train(cfg: DictConfig) -> None:
             if cfg.eval.interval_steps > 0 and global_step % cfg.eval.interval_steps == 0:
                 val_loss, val_acc = evaluate(model, val_loader, criterion, device)
                 if cfg.wandb.enabled:
-                    import wandb
+                    # import wandb
 
                     wandb.log(
                         {
@@ -269,7 +272,7 @@ def train(cfg: DictConfig) -> None:
             val_loss, val_acc = 0.0, 0.0
 
         if cfg.wandb.enabled:
-            import wandb
+            # import wandb
 
             wandb.log(
                 {

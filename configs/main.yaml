@@ -1,7 +1,7 @@
 defaults:
   - data: pneumonia
   - model: efficientnet_b0
-  - optimizer: adam_default
+  - optimizer: adam
   - experiment: null
   - _self_
 
