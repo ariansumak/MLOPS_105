@@ -1,0 +1,24 @@
+defaults:
+  - data: pneumonia
+  - model: efficientnet_b0
+  - optimizer: adam_default
+  - experiment: null
+  - _self_
+
+train:
+  epochs: 5
+  seed: 42
+  device: auto
+  output_dir: reports
+  log_interval_steps: 50
+
+eval:
+  interval_steps: 200
+  run_at_epoch_end: true
+
+wandb:
+  enabled: false
+  project: pneumoniaclassifier
+  entity: null
+  run_name: null
+  log_model: false

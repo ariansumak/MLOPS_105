@@ -9,11 +9,9 @@ import torch
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
-from torch.optim import Adam
-from torch.utils.data import DataLoader
 from torchvision import models
 
-from pneumoniaclassifier.data import MyDataset
+from pneumoniaclassifier.data import get_dataloaders
 from pneumoniaclassifier.evaluate import evaluate
 
 
@@ -21,18 +19,19 @@ from pneumoniaclassifier.evaluate import evaluate
 class DataConfig:
     """Configuration for dataset locations and loading."""
 
-    train_dir: Path = Path("data/train")
-    val_dir: Path = Path("data/val")
-    test_dir: Path = Path("data/test")
+    _target_: str = "pneumoniaclassifier.data.get_dataloaders"
+    data_dir: str = "data/chest_xray"
     batch_size: int = 16
     num_workers: int = 2
+    augment: bool = True
 
 
 @dataclass
 class ModelConfig:
     """Configuration for the model architecture."""
 
-    name: str = "efficientnet_b0"
+    _target_: str = "pneumoniaclassifier.train._build_model"
+    model_name: str = "efficientnet_b0"
     num_classes: int = 2
     pretrained: bool = True
     unfreeze_blocks: int = 0
@@ -42,7 +41,8 @@ class ModelConfig:
 class OptimizerConfig:
     """Configuration for the optimizer."""
 
-    learning_rate: float = 1e-4
+    _target_: str = "torch.optim.Adam"
+    lr: float = 1e-4
     weight_decay: float = 1e-4
 
 
@@ -136,29 +136,27 @@ def _set_trainable_layers(model: nn.Module, unfreeze_blocks: int) -> None:
 
     blocks = list(model.features.children())
     if unfreeze_blocks > len(blocks):
-        raise ValueError(
-            f"unfreeze_blocks={unfreeze_blocks} exceeds available blocks ({len(blocks)})."
-        )
+        raise ValueError(f"unfreeze_blocks={unfreeze_blocks} exceeds available blocks ({len(blocks)}).")
     for block in blocks[-unfreeze_blocks:]:
         for param in block.parameters():
             param.requires_grad = True
 
 
-def _create_loader(
-    dataset: MyDataset,
-    batch_size: int,
-    num_workers: int,
-    shuffle: bool,
-) -> DataLoader:
-    """Create a dataloader with consistent settings."""
+# def _create_loader(
+#     dataset: MyDataset,
+#     batch_size: int,
+#     num_workers: int,
+#     shuffle: bool,
+# ) -> DataLoader:
+#     """Create a dataloader with consistent settings."""
 
-    return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=num_workers,
-        pin_memory=torch.cuda.is_available(),
-    )
+#     return DataLoader(
+#         dataset,
+#         batch_size=batch_size,
+#         shuffle=shuffle,
+#         num_workers=num_workers,
+#         pin_memory=torch.cuda.is_available(),
+#     )
 
 
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
@@ -184,55 +182,34 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
-@hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
+@hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
 def train(cfg: DictConfig) -> None:
     """Train an EfficientNet model using the provided configuration."""
 
-    config = OmegaConf.merge(OmegaConf.structured(TrainConfig), cfg)
-    train_config = OmegaConf.to_object(config)
+    # config = OmegaConf.merge(OmegaConf.structured(TrainConfig), cfg)
+    # train_config = OmegaConf.to_object(config)
 
-    torch.manual_seed(train_config.train.seed)
-    device = _get_device(train_config.train.device)
+    # Set seeds & Device
+    torch.manual_seed(cfg.train.seed)
+    device = _get_device(cfg.train.device)
 
-    train_dataset = MyDataset(train_config.data.train_dir)
-    val_dataset = MyDataset(train_config.data.val_dir)
+    train_loader, val_loader, _ = hydra.utils.instantiate(cfg.data)
 
-    train_loader = _create_loader(
-        train_dataset,
-        batch_size=train_config.data.batch_size,
-        num_workers=train_config.data.num_workers,
-        shuffle=True,
-    )
-    val_loader = _create_loader(
-        val_dataset,
-        batch_size=train_config.data.batch_size,
-        num_workers=train_config.data.num_workers,
-        shuffle=False,
-    )
-
-    model = _build_model(
-        train_config.model.name,
-        train_config.model.num_classes,
-        train_config.model.pretrained,
-    )
-    _set_trainable_layers(model, train_config.model.unfreeze_blocks)
+    model = hydra.utils.instantiate(cfg.model)
+    _set_trainable_layers(model, cfg.model.unfreeze_blocks)
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(
-        _filter_trainable_parameters(model),
-        lr=train_config.optimizer.learning_rate,
-        weight_decay=train_config.optimizer.weight_decay,
-    )
+    optimizer = hydra.utils.instantiate(cfg.optimizer, params=_filter_trainable_parameters(model))
 
-    _init_wandb(train_config)
-    if train_config.wandb.enabled and train_config.wandb.log_model:
+    _init_wandb(cfg)
+    if cfg.wandb.enabled and cfg.wandb.log_model:
         import wandb
 
         wandb.watch(model, log="all", log_freq=100)
 
     global_step = 0
-    for epoch in range(1, train_config.train.epochs + 1):
+    for epoch in range(1, cfg.train.epochs + 1):
         model.train()
         epoch_loss = 0.0
         epoch_correct = 0
@@ -255,12 +232,9 @@ def train(cfg: DictConfig) -> None:
             epoch_correct += (preds == targets).sum().item()
             epoch_total += batch_size
 
-            if (
-                train_config.train.log_interval_steps > 0
-                and global_step % train_config.train.log_interval_steps == 0
-            ):
+            if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
                 batch_acc = (preds == targets).float().mean().item()
-                if train_config.wandb.enabled:
+                if cfg.wandb.enabled:
                     import wandb
 
                     wandb.log(
@@ -272,12 +246,9 @@ def train(cfg: DictConfig) -> None:
                         step=global_step,
                     )
 
-            if (
-                train_config.eval.interval_steps > 0
-                and global_step % train_config.eval.interval_steps == 0
-            ):
+            if cfg.eval.interval_steps > 0 and global_step % cfg.eval.interval_steps == 0:
                 val_loss, val_acc = evaluate(model, val_loader, criterion, device)
-                if train_config.wandb.enabled:
+                if cfg.wandb.enabled:
                     import wandb
 
                     wandb.log(
@@ -292,12 +263,12 @@ def train(cfg: DictConfig) -> None:
         epoch_loss = epoch_loss / max(epoch_total, 1)
         epoch_acc = epoch_correct / max(epoch_total, 1)
 
-        if train_config.eval.run_at_epoch_end:
+        if cfg.eval.run_at_epoch_end:
             val_loss, val_acc = evaluate(model, val_loader, criterion, device)
         else:
             val_loss, val_acc = 0.0, 0.0
 
-        if train_config.wandb.enabled:
+        if cfg.wandb.enabled:
             import wandb
 
             wandb.log(
@@ -311,7 +282,7 @@ def train(cfg: DictConfig) -> None:
             )
 
         print(
-            f"Epoch {epoch}/{train_config.train.epochs} "
+            f"Epoch {epoch}/{cfg.train.epochs} "
             f"train_loss={epoch_loss:.4f} train_acc={epoch_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
