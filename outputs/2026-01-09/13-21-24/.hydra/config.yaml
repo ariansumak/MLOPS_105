@@ -1,34 +1,30 @@
-defaults:
-  - experiment: baseline
-  - _self_
-
+experiment:
+  train:
+    epochs: 5
 data:
-  data_dir: /zhome/8a/1/224071/data/kaggle/chest-xray-pneumonia/chest_xray/
+  data_dir: !!python/object/apply:pathlib._local.PosixPath
+  - /zhome/8a/1/224071/data/kaggle/chest-xray-pneumonia/chest_xray/train
   batch_size: 16
   num_workers: 2
   augment: true
-
 model:
   name: efficientnet_b0
   num_classes: 2
   pretrained: true
   unfreeze_blocks: 0
-
 optimizer:
   learning_rate: 0.0001
   weight_decay: 0.0001
-
 train:
   epochs: 5
   seed: 42
   device: auto
-  output_dir: reports
+  output_dir: !!python/object/apply:pathlib._local.PosixPath
+  - reports
   log_interval_steps: 50
-
 eval:
   interval_steps: 200
   run_at_epoch_end: true
-
 wandb:
   enabled: true
   project: pneumoniaclassifier
