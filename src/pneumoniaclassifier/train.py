@@ -6,10 +6,12 @@ from typing import Iterable
 
 import hydra
 import torch
+import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
 from torchvision import models
+from tqdm import tqdm
 
 from pneumoniaclassifier.data import get_dataloaders
 from pneumoniaclassifier.evaluate import evaluate
@@ -170,8 +172,6 @@ def _init_wandb(config: TrainConfig) -> None:
     if not config.wandb.enabled:
         return
 
-    import wandb
-
     wandb.init(
         project=config.wandb.project,
         entity=config.wandb.entity,
@@ -218,7 +218,13 @@ def train(cfg: DictConfig) -> None:
         epoch_correct = 0
         epoch_total = 0
 
-        for inputs, targets in train_loader:
+        train_progress = tqdm(
+            train_loader,
+            desc=f"Epoch {epoch}/{train_config.train.epochs} [train]",
+            dynamic_ncols=True,
+            leave=False,
+        )
+        for inputs, targets in train_progress:
             global_step += 1
             inputs = inputs.to(device)
             targets = targets.to(device)
@@ -234,6 +240,10 @@ def train(cfg: DictConfig) -> None:
             preds = outputs.argmax(dim=1)
             epoch_correct += (preds == targets).sum().item()
             epoch_total += batch_size
+            train_progress.set_postfix(
+                loss=f"{loss.item():.4f}",
+                acc=f"{(preds == targets).float().mean().item():.4f}",
+            )
 
             if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
                 batch_acc = (preds == targets).float().mean().item()
