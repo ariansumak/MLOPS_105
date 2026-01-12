@@ -1,0 +1,29 @@
+{
+  "os":  "Linux-6.1.159-1.el9.elrepo.x86_64-x86_64-with-glibc2.34",
+  "python":  "CPython 3.13.11",
+  "startedAt":  "2026-01-12T15:02:30.733615Z",
+  "args":  [
+    "wandb.enabled=true"
+  ],
+  "program":  "-m pneumoniaclassifier.train",
+  "git":  {
+    "remote":  "https://github.com/ariansumak/MLOPS_105.git",
+    "commit":  "707c0aae234b30dcede4f8e303a165d1bfbbcbb1"
+  },
+  "email":  "s253819@dtu.dk",
+  "root":  "/zhome/8a/1/224071/code/MLOPS_105",
+  "host":  "gbarlogin1",
+  "executable":  "/zhome/8a/1/224071/code/MLOPS_105/.venv/bin/python3",
+  "cpu_count":  64,
+  "cpu_count_logical":  64,
+  "disk":  {
+    "/":  {
+      "total":  "76817485824",
+      "used":  "7812587520"
+    }
+  },
+  "memory":  {
+    "total":  "1081355767808"
+  },
+  "writerId":  "a0wur0tcva0zszkaw5cgjd6fy37mhqmq"
+}

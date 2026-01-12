@@ -220,7 +220,7 @@ def train(cfg: DictConfig) -> None:
 
         train_progress = tqdm(
             train_loader,
-            desc=f"Epoch {epoch}/{train_config.train.epochs} [train]",
+            desc=f"Epoch {epoch}/{cfg.train.epochs} [train]",
             dynamic_ncols=True,
             leave=False,
         )
