@@ -3,6 +3,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 def evaluate(
@@ -10,6 +11,8 @@ def evaluate(
     loader: DataLoader,
     criterion: nn.Module,
     device: torch.device,
+    show_progress: bool = False,
+    description: str = "Validation",
 ) -> tuple[float, float]:
     """Evaluate a model on a validation dataset."""
 
@@ -19,7 +22,10 @@ def evaluate(
     total = 0
 
     with torch.inference_mode():
-        for inputs, targets in loader:
+        data_iter = loader
+        if show_progress:
+            data_iter = tqdm(loader, desc=description, dynamic_ncols=True, leave=False)
+        for inputs, targets in data_iter:
             inputs = inputs.to(device)
             targets = targets.to(device)
 

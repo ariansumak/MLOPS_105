@@ -6,14 +6,15 @@ from typing import Iterable
 
 import hydra
 import torch
+import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
 from torch.optim import Adam
-from torch.utils.data import DataLoader
 from torchvision import models
+from tqdm import tqdm
 
-from pneumoniaclassifier.data import MyDataset
+from pneumoniaclassifier.data import get_dataloaders
 from pneumoniaclassifier.evaluate import evaluate
 
 
@@ -21,11 +22,10 @@ from pneumoniaclassifier.evaluate import evaluate
 class DataConfig:
     """Configuration for dataset locations and loading."""
 
-    train_dir: Path = Path("data/train")
-    val_dir: Path = Path("data/val")
-    test_dir: Path = Path("data/test")
+    data_dir: Path = Path("/zhome/8a/1/224071/data/kaggle/chest-xray-pneumonia/chest_xray/")
     batch_size: int = 16
     num_workers: int = 2
+    augment: bool = True
 
 
 @dataclass
@@ -144,23 +144,6 @@ def _set_trainable_layers(model: nn.Module, unfreeze_blocks: int) -> None:
             param.requires_grad = True
 
 
-def _create_loader(
-    dataset: MyDataset,
-    batch_size: int,
-    num_workers: int,
-    shuffle: bool,
-) -> DataLoader:
-    """Create a dataloader with consistent settings."""
-
-    return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=num_workers,
-        pin_memory=torch.cuda.is_available(),
-    )
-
-
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
     """Return parameters that require gradients."""
 
@@ -172,8 +155,6 @@ def _init_wandb(config: TrainConfig) -> None:
 
     if not config.wandb.enabled:
         return
-
-    import wandb
 
     wandb.init(
         project=config.wandb.project,
@@ -194,20 +175,17 @@ def train(cfg: DictConfig) -> None:
     torch.manual_seed(train_config.train.seed)
     device = _get_device(train_config.train.device)
 
-    train_dataset = MyDataset(train_config.data.train_dir)
-    val_dataset = MyDataset(train_config.data.val_dir)
-
-    train_loader = _create_loader(
-        train_dataset,
+    print(f"Loading datasets from {train_config.data.data_dir}")
+    train_loader, val_loader, _ = get_dataloaders(
+        data_dir=str(train_config.data.data_dir),
         batch_size=train_config.data.batch_size,
         num_workers=train_config.data.num_workers,
-        shuffle=True,
+        augment=train_config.data.augment,
     )
-    val_loader = _create_loader(
-        val_dataset,
-        batch_size=train_config.data.batch_size,
-        num_workers=train_config.data.num_workers,
-        shuffle=False,
+    print(
+        f"Train samples: {len(train_loader.dataset)} | "
+        f"Val samples: {len(val_loader.dataset)} | "
+        f"Batch size: {train_config.data.batch_size}"
     )
 
     model = _build_model(
@@ -238,7 +216,13 @@ def train(cfg: DictConfig) -> None:
         epoch_correct = 0
         epoch_total = 0
 
-        for inputs, targets in train_loader:
+        train_progress = tqdm(
+            train_loader,
+            desc=f"Epoch {epoch}/{train_config.train.epochs} [train]",
+            dynamic_ncols=True,
+            leave=False,
+        )
+        for inputs, targets in train_progress:
             global_step += 1
             inputs = inputs.to(device)
             targets = targets.to(device)
@@ -254,6 +238,10 @@ def train(cfg: DictConfig) -> None:
             preds = outputs.argmax(dim=1)
             epoch_correct += (preds == targets).sum().item()
             epoch_total += batch_size
+            train_progress.set_postfix(
+                loss=f"{loss.item():.4f}",
+                acc=f"{(preds == targets).float().mean().item():.4f}",
+            )
 
             if (
                 train_config.train.log_interval_steps > 0
@@ -276,6 +264,7 @@ def train(cfg: DictConfig) -> None:
                 train_config.eval.interval_steps > 0
                 and global_step % train_config.eval.interval_steps == 0
             ):
+                print(f"Running validation at step {global_step}")
                 val_loss, val_acc = evaluate(model, val_loader, criterion, device)
                 if train_config.wandb.enabled:
                     import wandb
@@ -293,7 +282,14 @@ def train(cfg: DictConfig) -> None:
         epoch_acc = epoch_correct / max(epoch_total, 1)
 
         if train_config.eval.run_at_epoch_end:
-            val_loss, val_acc = evaluate(model, val_loader, criterion, device)
+            val_loss, val_acc = evaluate(
+                model,
+                val_loader,
+                criterion,
+                device,
+                show_progress=True,
+                description=f"Epoch {epoch}/{train_config.train.epochs} [val]",
+            )
         else:
             val_loss, val_acc = 0.0, 0.0
 
