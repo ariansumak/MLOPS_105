@@ -207,8 +207,6 @@ def train(cfg: DictConfig) -> None:
 
     _init_wandb(cfg)
     if cfg.wandb.enabled and cfg.wandb.log_model:
-        import wandb
-
         wandb.watch(model, log="all", log_freq=100)
 
     global_step = 0
@@ -248,8 +246,6 @@ def train(cfg: DictConfig) -> None:
             if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
                 batch_acc = (preds == targets).float().mean().item()
                 if cfg.wandb.enabled:
-                    # import wandb
-
                     wandb.log(
                         {
                             "train/step_loss": loss.item(),
@@ -262,8 +258,6 @@ def train(cfg: DictConfig) -> None:
             if cfg.eval.interval_steps > 0 and global_step % cfg.eval.interval_steps == 0:
                 val_loss, val_acc = evaluate(model, val_loader, criterion, device)
                 if cfg.wandb.enabled:
-                    # import wandb
-
                     wandb.log(
                         {
                             "val/loss": val_loss,
@@ -282,8 +276,6 @@ def train(cfg: DictConfig) -> None:
             val_loss, val_acc = 0.0, 0.0
 
         if cfg.wandb.enabled:
-            # import wandb
-
             wandb.log(
                 {
                     "train/epoch_loss": epoch_loss,
