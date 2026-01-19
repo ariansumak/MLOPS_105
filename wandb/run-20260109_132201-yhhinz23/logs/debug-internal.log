@@ -1,8 +1,0 @@
-{"time":"2026-01-09T13:22:05.345119642+01:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
-{"time":"2026-01-09T13:22:06.181515824+01:00","level":"INFO","msg":"stream: created new stream","id":"yhhinz23"}
-{"time":"2026-01-09T13:22:06.18160665+01:00","level":"INFO","msg":"handler: started","stream_id":"yhhinz23"}
-{"time":"2026-01-09T13:22:06.184318769+01:00","level":"INFO","msg":"stream: started","id":"yhhinz23"}
-{"time":"2026-01-09T13:22:06.18435263+01:00","level":"INFO","msg":"writer: started","stream_id":"yhhinz23"}
-{"time":"2026-01-09T13:22:06.184358609+01:00","level":"INFO","msg":"sender: started","stream_id":"yhhinz23"}
-{"time":"2026-01-09T13:22:06.595884362+01:00","level":"WARN","msg":"handleCodeSave: program relative path is empty"}
-{"time":"2026-01-09T13:22:06.645048481+01:00","level":"ERROR","msg":"error getting latest commit","error":"exit status 128"}
