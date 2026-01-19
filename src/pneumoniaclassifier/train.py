@@ -1,20 +1,20 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 import hydra
 import torch
-import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
-from torchvision import models
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from pneumoniaclassifier.data import get_dataloaders
+import wandb
 from pneumoniaclassifier.evaluate import evaluate
+from pneumoniaclassifier.model import _build_model, _set_trainable_layers
 
 
 @dataclass
@@ -59,6 +59,15 @@ class TrainLoopConfig:
 
 
 @dataclass
+class TrainEpochConfig:
+    """Configuration for training epoch."""
+
+    epoch: int
+    log_interval_steps: int
+    wandb_enabled: bool
+
+
+@dataclass
 class EvalConfig:
     """Configuration for validation during training."""
 
@@ -94,81 +103,18 @@ ConfigStore.instance().store(name="train", node=TrainConfig)
 
 def _get_device(device: str) -> torch.device:
     """Resolve the requested device into a torch device."""
-
     if device == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return torch.device(device)
 
 
-def _build_model(model_name: str, num_classes: int, pretrained: bool) -> nn.Module:
-    """Build an EfficientNet model with an updated classifier head."""
-
-    model_registry = {
-        "efficientnet_b0": (models.efficientnet_b0, models.EfficientNet_B0_Weights.DEFAULT),
-        "efficientnet_b1": (models.efficientnet_b1, models.EfficientNet_B1_Weights.DEFAULT),
-        "efficientnet_b2": (models.efficientnet_b2, models.EfficientNet_B2_Weights.DEFAULT),
-        "efficientnet_b3": (models.efficientnet_b3, models.EfficientNet_B3_Weights.DEFAULT),
-    }
-    model_entry = model_registry.get(model_name)
-    model_fn = model_entry[0] if model_entry is not None else None
-    if model_fn is None:
-        raise ValueError(f"Unsupported model name: {model_name}")
-
-    weights = model_entry[1] if pretrained else None
-    model = model_fn(weights=weights)
-    in_features = model.classifier[-1].in_features
-    model.classifier[-1] = nn.Linear(in_features, num_classes)
-    return model
-
-
-def _set_trainable_layers(model: nn.Module, unfreeze_blocks: int) -> None:
-    """Freeze all parameters except the classifier and optionally the last N EfficientNet blocks."""
-
-    for param in model.parameters():
-        param.requires_grad = False
-    for param in model.classifier.parameters():
-        param.requires_grad = True
-
-    if unfreeze_blocks <= 0:
-        return
-
-    if not hasattr(model, "features"):
-        raise ValueError("Model does not expose a features attribute for block unfreezing.")
-
-    blocks = list(model.features.children())
-    if unfreeze_blocks > len(blocks):
-        raise ValueError(f"unfreeze_blocks={unfreeze_blocks} exceeds available blocks ({len(blocks)}).")
-    for block in blocks[-unfreeze_blocks:]:
-        for param in block.parameters():
-            param.requires_grad = True
-
-
-# def _create_loader(
-#     dataset: MyDataset,
-#     batch_size: int,
-#     num_workers: int,
-#     shuffle: bool,
-# ) -> DataLoader:
-#     """Create a dataloader with consistent settings."""
-
-#     return DataLoader(
-#         dataset,
-#         batch_size=batch_size,
-#         shuffle=shuffle,
-#         num_workers=num_workers,
-#         pin_memory=torch.cuda.is_available(),
-#     )
-
-
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
     """Return parameters that require gradients."""
-
     return (param for param in model.parameters() if param.requires_grad)
 
 
 def _init_wandb(config: TrainConfig) -> None:
     """Initialize a Weights & Biases run when enabled."""
-
     if not config.wandb.enabled:
         return
 
@@ -181,13 +127,181 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
+def log_step_metrics(
+    step_loss: float,
+    step_acc: float,
+    epoch: int,
+    global_step: int,
+    wandb_enabled: bool = True,
+) -> None:
+    """
+    Log step-level training metrics to Weights & Biases.
+
+    Args:
+        step_loss: Loss value for the current step
+        step_acc: Accuracy for the current step
+        epoch: Current epoch number
+        global_step: Global training step number
+        wandb_enabled: Whether to actually log (allows disabling for tests)
+
+    """
+    if not wandb_enabled:
+        return
+
+    wandb.log(
+        {
+            "train/step_loss": step_loss,
+            "train/step_accuracy": step_acc,
+            "epoch": epoch,
+        },
+        step=global_step,
+    )
+
+
+def evaluate_and_log(
+    model: nn.Module,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device,
+    epoch: int,
+    global_step: int,
+    wandb_enabled: bool = True,
+) -> tuple[float, float]:
+    """
+    Evaluate the model and log validation metrics.
+
+    Args:
+        model: Model to evaluate
+        val_loader: Validation data loader
+        criterion: Loss function
+        device: Device to run evaluation on
+        epoch: Current epoch number
+        global_step: Global training step number
+        wandb_enabled: Whether to log to wandb
+
+    Returns:
+        Tuple of (validation_loss, validation_accuracy)
+
+    """
+    val_loss, val_acc = evaluate(model, val_loader, criterion, device)
+
+    if wandb_enabled:
+        wandb.log(
+            {
+                "val/loss": val_loss,
+                "val/accuracy": val_acc,
+                "epoch": epoch,
+            },
+            step=global_step,
+        )
+
+    return val_loss, val_acc
+
+
+# ============================================================================
+# Epoch Training Function (core training logic)
+# ============================================================================
+
+
+def train_epoch(
+    model: nn.Module,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    epoch: int,
+    global_step: int,
+    log_interval_steps: int = 50,
+    eval_interval_steps: int = 200,
+    wandb_enabled: bool = True,
+    show_progress: bool = True,
+) -> tuple[float, float, int]:
+    """
+    Train for one epoch with logging and validation.
+
+    Args:
+        model: Model to train
+        train_loader: Training data loader
+        val_loader: Validation data loader
+        criterion: Loss function
+        optimizer: Optimizer
+        device: Device to train on
+        epoch: Current epoch number
+        global_step: Starting global step number
+        log_interval_steps: Log metrics every N steps (0 to disable)
+        eval_interval_steps: Run validation every N steps (0 to disable)
+        wandb_enabled: Whether to log to wandb
+        show_progress: Whether to show tqdm progress bar
+
+    Returns:
+        Tuple of (epoch_loss, epoch_accuracy, final_global_step)
+
+    """
+    model.train()
+
+    epoch_loss = 0.0
+    epoch_correct = 0
+    epoch_total = 0
+
+    iterator = train_loader
+    if show_progress:
+        iterator = tqdm(
+            train_loader,
+            desc=f"Epoch {epoch} [train]",
+            dynamic_ncols=True,
+            leave=False,
+        )
+
+    for inputs, targets in iterator:
+        global_step += 1
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+
+        # Forward pass
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
+
+        # Calculate metrics
+        batch_size = targets.size(0)
+        preds = outputs.argmax(dim=1)
+        step_loss = loss.item()
+        step_acc = (preds == targets).float().mean().item()
+
+        # Accumulate epoch metrics
+        epoch_loss += step_loss * batch_size
+        epoch_correct += (preds == targets).sum().item()
+        epoch_total += batch_size
+
+        # Update progress bar
+        if show_progress:
+            iterator.set_postfix(
+                loss=f"{step_loss:.4f}",
+                acc=f"{step_acc:.4f}",
+            )
+
+        # Log step metrics
+        if log_interval_steps > 0 and global_step % log_interval_steps == 0:
+            log_step_metrics(step_loss, step_acc, epoch, global_step, wandb_enabled)
+
+        # Run intermediate validation
+        if eval_interval_steps > 0 and global_step % eval_interval_steps == 0:
+            evaluate_and_log(model, val_loader, criterion, device, epoch, global_step, wandb_enabled)
+            model.train()  # Switch back to training mode
+
+    # Calculate epoch averages
+    epoch_loss = epoch_loss / max(epoch_total, 1)
+    epoch_acc = epoch_correct / max(epoch_total, 1)
+
+    return epoch_loss, epoch_acc, global_step
+
+
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
 def train(cfg: DictConfig) -> None:
     """Train an EfficientNet model using the provided configuration."""
-
-    # config = OmegaConf.merge(OmegaConf.structured(TrainConfig), cfg)
-    # train_config = OmegaConf.to_object(config)
-
     # Set seeds & Device
     torch.manual_seed(cfg.train.seed)
     device = _get_device(cfg.train.device)
@@ -211,84 +325,40 @@ def train(cfg: DictConfig) -> None:
 
     global_step = 0
     for epoch in range(1, cfg.train.epochs + 1):
-        model.train()
-        epoch_loss = 0.0
-        epoch_correct = 0
-        epoch_total = 0
-
-        train_progress = tqdm(
-            train_loader,
-            desc=f"Epoch {epoch}/{cfg.train.epochs} [train]",
-            dynamic_ncols=True,
-            leave=False,
+        train_loss, train_acc, global_step = train_epoch(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
+            epoch=epoch,
+            global_step=global_step,
+            log_interval_steps=cfg.train.log_interval_steps,
+            eval_interval_steps=cfg.eval.interval_steps,
+            wandb_enabled=cfg.wandb.enabled,
+            show_progress=True,
         )
-        for inputs, targets in train_progress:
-            global_step += 1
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
-
-            batch_size = targets.size(0)
-            epoch_loss += loss.item() * batch_size
-            preds = outputs.argmax(dim=1)
-            epoch_correct += (preds == targets).sum().item()
-            epoch_total += batch_size
-            train_progress.set_postfix(
-                loss=f"{loss.item():.4f}",
-                acc=f"{(preds == targets).float().mean().item():.4f}",
-            )
-
-            if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
-                batch_acc = (preds == targets).float().mean().item()
-                if cfg.wandb.enabled:
-                    wandb.log(
-                        {
-                            "train/step_loss": loss.item(),
-                            "train/step_accuracy": batch_acc,
-                            "epoch": epoch,
-                        },
-                        step=global_step,
-                    )
-
-            if cfg.eval.interval_steps > 0 and global_step % cfg.eval.interval_steps == 0:
-                val_loss, val_acc = evaluate(model, val_loader, criterion, device)
-                if cfg.wandb.enabled:
-                    wandb.log(
-                        {
-                            "val/loss": val_loss,
-                            "val/accuracy": val_acc,
-                            "epoch": epoch,
-                        },
-                        step=global_step,
-                    )
-
-        epoch_loss = epoch_loss / max(epoch_total, 1)
-        epoch_acc = epoch_correct / max(epoch_total, 1)
 
         if cfg.eval.run_at_epoch_end:
             val_loss, val_acc = evaluate(model, val_loader, criterion, device)
         else:
             val_loss, val_acc = 0.0, 0.0
 
+        # Log epoch metrics
         if cfg.wandb.enabled:
             wandb.log(
-                {
-                    "train/epoch_loss": epoch_loss,
-                    "train/epoch_accuracy": epoch_acc,
-                    "val/epoch_loss": val_loss,
-                    "val/epoch_accuracy": val_acc,
-                    "epoch": epoch,
-                }
-            )
+        {
+            "train/epoch_loss": train_loss,
+            "train/epoch_accuracy": train_acc,
+            "val/epoch_loss": val_loss,
+            "val/epoch_accuracy": val_acc,
+            "epoch": epoch,
+        })
 
         print(
             f"Epoch {epoch}/{cfg.train.epochs} "
-            f"train_loss={epoch_loss:.4f} train_acc={epoch_acc:.4f} "
+            f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
 
