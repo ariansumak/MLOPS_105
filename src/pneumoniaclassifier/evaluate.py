@@ -15,7 +15,6 @@ def evaluate(
     description: str = "Validation",
 ) -> tuple[float, float]:
     """Evaluate a model on a validation dataset."""
-
     model.eval()
     total_loss = 0.0
     correct = 0
