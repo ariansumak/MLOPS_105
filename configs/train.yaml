@@ -3,7 +3,7 @@ defaults:
   - _self_
 
 data:
-  data_dir: /zhome/8a/1/224071/data/kaggle/chest-xray-pneumonia/chest_xray/
+  data_dir: ${oc.env:DATA_DIR,data/chest_xray}
   batch_size: 16
   num_workers: 2
   augment: true
