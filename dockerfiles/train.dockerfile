@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 RUN apt update && \
-        apt install --no-install-recommends -y build-essential gcc git dvc && \
+        apt install --no-install-recommends -y build-essential gcc git && \
         apt clean && rm -rf /var/lib/apt/lists/*
 
 # Use a project directory inside the image
@@ -19,7 +19,11 @@ COPY .dvc/config .dvc/config
 COPY .dvcignore .dvcignore
 COPY data.dvc data.dvc
 
+# Install Python dependencies
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
+
+# Install DVC via uv (ensures compatibility with project environment)
+RUN uv pip install dvc[gs]
 
 # Pull data at runtime, not build time
 # DVC will use configuration from .dvc/config
