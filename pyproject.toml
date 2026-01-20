@@ -73,3 +73,8 @@ ignore = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*/config/*"]
+
+[project.scripts]
+train = "pneumoniaclassifier.train:train"
+evaluate = "pneumoniaclassifier.evaluate:evaluate"
+data-check = "pneumoniaclassifier.data:get_dataloaders"
