@@ -87,3 +87,5 @@ dvc push
 - **`data/raw/`**: Original, immutable images.
 - **`data/processed/`**: Cleaned and transformed data.
 - **`models/`**: Serialized model weights (`.pt`, `.h5`, etc.).
+
+https://drive.google.com/drive/u/0/folders/1qOo7lw6i7hjdfVnFhR9H6mkQo_U18kj0 --> MLOPS Google Drive Folder
