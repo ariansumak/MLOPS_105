@@ -2,8 +2,9 @@ import pytest
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-from pneumoniaclassifier.train import train_epoch, log_step_metrics
+
 from pneumoniaclassifier.model import _build_model
+from pneumoniaclassifier.train import train_epoch
 
 
 @pytest.fixture
@@ -31,7 +32,7 @@ def test_train_epoch_with_real_model(real_model, dummy_data):
     optimizer = torch.optim.Adam(real_model.parameters())
     device = torch.device("cpu")
 
-    epoch_loss, epoch_acc, final_step = train_epoch(
+    epoch_loss, epoch_acc, _ = train_epoch(
         real_model,
         dummy_data,
         dummy_data,
