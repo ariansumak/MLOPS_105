@@ -30,7 +30,7 @@ def link_model(artifact_path: str, aliases: list[str] = typer.Option(
     artifact_name, _ = artifact_name_version.split(":")
 
     artifact = api.artifact(artifact_path)
-    typer.echo(f"Artifact name is {artifact_name}")
+    typer.echo(f"Artifact name is {artifact_name} and wandb entity is {os.getenv('WANDB_ENTITY')}")
     artifact.link(target_path=f"{os.getenv('WANDB_ENTITY')}/wandb-registry-pneumonia_models/{artifact_name}", aliases=aliases)
     artifact.save()
     typer.echo(f"Artifact {artifact_path} linked to {aliases}")
