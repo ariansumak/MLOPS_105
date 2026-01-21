@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import io
 import os
+from pathlib import Path
 
+import torch
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from omegaconf import DictConfig
 from pydantic import BaseModel
 from PIL import Image
+from torchvision import transforms
 
 from pneumoniaclassifier.inference import (
     build_transform,
@@ -51,14 +55,44 @@ def _get_cors_origins() -> list[str]:
     ]
 
 
+def _resolve_config_path() -> Path:
+    """Resolve the inference configuration path."""
+
+    return resolve_config_path()
+
+
+def _load_config(config_path: Path) -> DictConfig:
+    """Load the inference configuration."""
+
+    return load_config(config_path)
+
+
+def _get_device(device_name: str) -> torch.device:
+    """Resolve the requested device into a torch device."""
+
+    return get_device(device_name)
+
+
+def _build_transform(cfg: DictConfig) -> transforms.Compose:
+    """Create the image preprocessing pipeline."""
+
+    return build_transform(cfg)
+
+
+def _load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
+    """Load the model for inference."""
+
+    return load_model(cfg, device)
+
+
 def create_app() -> FastAPI:
     """Create the FastAPI application."""
 
-    config_path = resolve_config_path()
-    cfg = load_config(config_path)
-    device = get_device(cfg.inference.device)
-    model = load_model(cfg, device)
-    transform = build_transform(cfg)
+    config_path = _resolve_config_path()
+    cfg = _load_config(config_path)
+    device = _get_device(cfg.inference.device)
+    model = _load_model(cfg, device)
+    transform = _build_transform(cfg)
     class_names = list(cfg.inference.class_names)
 
     app = FastAPI(title="Pneumonia Classifier API", version="0.1.0")
