@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DTU Pneumonia Inference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">DTU Health Tech</p>
+        <h1>Pneumonia Screening API</h1>
+        <p class="subtitle">
+          A lightweight testing console for the M22 FastAPI inference service. Upload a chest X-ray
+          and inspect class probabilities in real time.
+        </p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Request</h2>
+            <p>Point to your API and send an image.</p>
+          </div>
+          <div class="status" id="statusBadge">Idle</div>
+        </div>
+
+        <form id="predictForm" class="form">
+          <label class="field">
+            <span>API base URL</span>
+            <input
+              type="url"
+              id="apiUrl"
+              name="apiUrl"
+              placeholder="http://localhost:8000"
+              value="http://localhost:8000"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>Chest X-ray image</span>
+            <input type="file" id="imageFile" name="imageFile" accept="image/*" required />
+          </label>
+
+          <div class="actions">
+            <button type="submit" class="primary">Run inference</button>
+            <button type="button" class="ghost" id="healthBtn">Check health</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel results">
+        <div class="panel-header">
+          <div>
+            <h2>Response</h2>
+            <p>Prediction summary and probabilities.</p>
+          </div>
+          <div class="badge" id="latencyBadge">-- ms</div>
+        </div>
+
+        <div class="response" id="responseBox">
+          <div class="response-placeholder">Waiting for a request.</div>
+        </div>
+      </section>
+
+      <section class="panel preview">
+        <div class="panel-header">
+          <div>
+            <h2>Preview</h2>
+            <p>Uploaded image used for inference.</p>
+          </div>
+        </div>
+        <div class="preview-frame">
+          <img id="previewImage" alt="Uploaded X-ray preview" />
+          <div class="preview-placeholder" id="previewPlaceholder">Drop an image to preview.</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Built for M22/M26. Keep the model config in sync with your API.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
