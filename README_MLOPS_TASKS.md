@@ -53,17 +53,27 @@ Process to complete M24
 
 ## M25 - Specialized deployment API (ONNX or BentoML)
 
-Status: pending
+Status: in progress
+
+What exists
+- BentoML service: `src/pneumoniaclassifier/bento_service.py`
+- Bento build config: `bentofile.yaml`
+- Shared inference utilities: `src/pneumoniaclassifier/inference.py`
+
+How to run and invoke (local)
+1) Start the service:
+   `uv run bentoml serve src.pneumoniaclassifier.bento_service:PneumoniaClassifierService`
+2) Invoke prediction:
+   `curl -F "image=@tests/fixtures/sample.png" http://127.0.0.1:3000/predict`
 
 What is missing
-- A dedicated inference path using ONNX or BentoML.
-- A short description of how to run and invoke it.
-- Any tests or minimal validation showing it works.
+- A short validation note or test run (record response output).
+- Optional: containerize the Bento service and deploy to Cloud Run.
 
 Suggested completion path
-1) Export the model to ONNX or package it with BentoML.
-2) Add a small inference entrypoint and instructions.
-3) Add a short validation note or test.
+1) Run the Bento service and capture a sample response.
+2) Add the response to the report or README.
+3) (Optional) Build and deploy the Bento container to Cloud Run.
 
 ## M26 - Frontend for the API
 
