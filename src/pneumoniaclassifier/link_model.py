@@ -3,7 +3,9 @@ import os
 import wandb
 
 
-def link_model(artifact_path: str, aliases: list[str] = ["staging"]) -> None:
+def link_model(artifact_path: str, aliases: list[str] = typer.Option(
+        ["staging"], "-a", "--alias", help="Aliases to link the artifact with", show_default=True
+    )) -> None:
     """
     Stage a specific model to the model registry.
 
