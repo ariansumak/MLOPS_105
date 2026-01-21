@@ -10,11 +10,11 @@ import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
-from torchvision import models
 from tqdm import tqdm
 
 from pneumoniaclassifier.data import get_dataloaders
 from pneumoniaclassifier.evaluate import evaluate
+from pneumoniaclassifier.modeling import build_model, set_trainable_layers
 
 
 @dataclass
@@ -56,6 +56,8 @@ class TrainLoopConfig:
     device: str = "auto"
     output_dir: Path = Path("reports")
     log_interval_steps: int = 50
+    save_checkpoint: bool = True
+    checkpoint_path: Path = Path("models/m22_model.pt")
 
 
 @dataclass
@@ -100,49 +102,6 @@ def _get_device(device: str) -> torch.device:
     return torch.device(device)
 
 
-def _build_model(model_name: str, num_classes: int, pretrained: bool) -> nn.Module:
-    """Build an EfficientNet model with an updated classifier head."""
-
-    model_registry = {
-        "efficientnet_b0": (models.efficientnet_b0, models.EfficientNet_B0_Weights.DEFAULT),
-        "efficientnet_b1": (models.efficientnet_b1, models.EfficientNet_B1_Weights.DEFAULT),
-        "efficientnet_b2": (models.efficientnet_b2, models.EfficientNet_B2_Weights.DEFAULT),
-        "efficientnet_b3": (models.efficientnet_b3, models.EfficientNet_B3_Weights.DEFAULT),
-    }
-    model_entry = model_registry.get(model_name)
-    model_fn = model_entry[0] if model_entry is not None else None
-    if model_fn is None:
-        raise ValueError(f"Unsupported model name: {model_name}")
-
-    weights = model_entry[1] if pretrained else None
-    model = model_fn(weights=weights)
-    in_features = model.classifier[-1].in_features
-    model.classifier[-1] = nn.Linear(in_features, num_classes)
-    return model
-
-
-def _set_trainable_layers(model: nn.Module, unfreeze_blocks: int) -> None:
-    """Freeze all parameters except the classifier and optionally the last N EfficientNet blocks."""
-
-    for param in model.parameters():
-        param.requires_grad = False
-    for param in model.classifier.parameters():
-        param.requires_grad = True
-
-    if unfreeze_blocks <= 0:
-        return
-
-    if not hasattr(model, "features"):
-        raise ValueError("Model does not expose a features attribute for block unfreezing.")
-
-    blocks = list(model.features.children())
-    if unfreeze_blocks > len(blocks):
-        raise ValueError(f"unfreeze_blocks={unfreeze_blocks} exceeds available blocks ({len(blocks)}).")
-    for block in blocks[-unfreeze_blocks:]:
-        for param in block.parameters():
-            param.requires_grad = True
-
-
 # def _create_loader(
 #     dataset: MyDataset,
 #     batch_size: int,
@@ -181,6 +140,18 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
+    """Save the model state dict to a checkpoint path.
+
+    Args:
+        model: Trained model to persist.
+        checkpoint_path: Destination path for the checkpoint.
+    """
+
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), checkpoint_path)
+
+
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
 def train(cfg: DictConfig) -> None:
     """Train an EfficientNet model using the provided configuration."""
@@ -194,12 +165,12 @@ def train(cfg: DictConfig) -> None:
 
     train_loader, val_loader, _ = hydra.utils.instantiate(cfg.data)
 
-    model = _build_model(
+    model = build_model(
         model_name=cfg.model.name,
         num_classes=cfg.model.num_classes,
         pretrained=cfg.model.pretrained,
     )
-    _set_trainable_layers(model, cfg.model.unfreeze_blocks)
+    set_trainable_layers(model, cfg.model.unfreeze_blocks)
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
@@ -291,6 +262,9 @@ def train(cfg: DictConfig) -> None:
             f"train_loss={epoch_loss:.4f} train_acc={epoch_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
+
+    if cfg.train.save_checkpoint:
+        _save_checkpoint(model, Path(cfg.train.checkpoint_path))
 
 
 if __name__ == "__main__":
