@@ -131,7 +131,7 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
-def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool) -> None:
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool, model_name: str) -> None:
     """Save the model state dict to a checkpoint path.
 
     Args:
@@ -144,9 +144,12 @@ def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool) 
     torch.save(model.state_dict(), checkpoint_path)
 
     if save_wandb:
-        artifact = wandb.Artifact(name="model_checkpoint", type="model")
+        if wandb.run is None:
+            raise RuntimeError("wandb.init() must be called before saving checpoints to wandb")
+        artifact = wandb.Artifact(name=model_name, type="model")
         artifact.add_file(str(checkpoint_path))
-        wandb.log_artifact(artifact)
+        wandb.run.log_artifact(artifact)
+        wandb.run.link_artifact(artifact=artifact, target_path="s253819-danmarks-tekniske-universitet-dtu-org/wandb-registry-pneumonia_models/models", aliases=["latest", "code"])
 
 
 def train_epoch(
@@ -299,7 +302,7 @@ def train(cfg: DictConfig) -> None:
         )
 
     if cfg.train.save_checkpoint:
-        _save_checkpoint(model, Path(cfg.train.checkpoint_path), cfg.wandb.enabled)
+        _save_checkpoint(model, Path(cfg.train.checkpoint_path), cfg.wandb.enabled, cfg.wandb.model_name)
 
 
 if __name__ == "__main__":
