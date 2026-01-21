@@ -23,6 +23,6 @@ def test_model_speed():
     model.eval()
     start = time.time()
     for _ in range(100):
-        model(torch.rand(1, 1, 28, 28))
+        model(torch.rand(1, 3, 28, 28))
     end = time.time()
     assert end - start < 5
