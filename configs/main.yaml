@@ -19,8 +19,9 @@ eval:
   run_at_epoch_end: true
 
 wandb:
-  enabled: false
+  enabled: true
   project: pneumoniaclassifier
   entity: null
   run_name: null
   log_model: false
+  model_name: model1
