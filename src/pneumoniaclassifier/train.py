@@ -1,18 +1,17 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 import hydra
 import torch
-import wandb
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
 from tqdm import tqdm
 
-from pneumoniaclassifier.data import get_dataloaders
+import wandb
 from pneumoniaclassifier.evaluate import evaluate
 from pneumoniaclassifier.modeling import build_model, set_trainable_layers
 
@@ -61,6 +60,15 @@ class TrainLoopConfig:
 
 
 @dataclass
+class TrainEpochConfig:
+    """Configuration for training epoch."""
+
+    epoch: int
+    log_interval_steps: int
+    wandb_enabled: bool
+
+
+@dataclass
 class EvalConfig:
     """Configuration for validation during training."""
 
@@ -96,7 +104,6 @@ ConfigStore.instance().store(name="train", node=TrainConfig)
 
 def _get_device(device: str) -> torch.device:
     """Resolve the requested device into a torch device."""
-
     if device == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return torch.device(device)
@@ -121,13 +128,11 @@ def _get_device(device: str) -> torch.device:
 
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
     """Return parameters that require gradients."""
-
     return (param for param in model.parameters() if param.requires_grad)
 
 
 def _init_wandb(config: TrainConfig) -> None:
     """Initialize a Weights & Biases run when enabled."""
-
     if not config.wandb.enabled:
         return
 
@@ -155,10 +160,6 @@ def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
 def train(cfg: DictConfig) -> None:
     """Train an EfficientNet model using the provided configuration."""
-
-    # config = OmegaConf.merge(OmegaConf.structured(TrainConfig), cfg)
-    # train_config = OmegaConf.to_object(config)
-
     # Set seeds & Device
     torch.manual_seed(cfg.train.seed)
     device = _get_device(cfg.train.device)
@@ -182,84 +183,40 @@ def train(cfg: DictConfig) -> None:
 
     global_step = 0
     for epoch in range(1, cfg.train.epochs + 1):
-        model.train()
-        epoch_loss = 0.0
-        epoch_correct = 0
-        epoch_total = 0
-
-        train_progress = tqdm(
-            train_loader,
-            desc=f"Epoch {epoch}/{cfg.train.epochs} [train]",
-            dynamic_ncols=True,
-            leave=False,
+        train_loss, train_acc, global_step = train_epoch(
+            model=model,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
+            epoch=epoch,
+            global_step=global_step,
+            log_interval_steps=cfg.train.log_interval_steps,
+            eval_interval_steps=cfg.eval.interval_steps,
+            wandb_enabled=cfg.wandb.enabled,
+            show_progress=True,
         )
-        for inputs, targets in train_progress:
-            global_step += 1
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
-
-            batch_size = targets.size(0)
-            epoch_loss += loss.item() * batch_size
-            preds = outputs.argmax(dim=1)
-            epoch_correct += (preds == targets).sum().item()
-            epoch_total += batch_size
-            train_progress.set_postfix(
-                loss=f"{loss.item():.4f}",
-                acc=f"{(preds == targets).float().mean().item():.4f}",
-            )
-
-            if cfg.train.log_interval_steps > 0 and global_step % cfg.train.log_interval_steps == 0:
-                batch_acc = (preds == targets).float().mean().item()
-                if cfg.wandb.enabled:
-                    wandb.log(
-                        {
-                            "train/step_loss": loss.item(),
-                            "train/step_accuracy": batch_acc,
-                            "epoch": epoch,
-                        },
-                        step=global_step,
-                    )
-
-            if cfg.eval.interval_steps > 0 and global_step % cfg.eval.interval_steps == 0:
-                val_loss, val_acc = evaluate(model, val_loader, criterion, device)
-                if cfg.wandb.enabled:
-                    wandb.log(
-                        {
-                            "val/loss": val_loss,
-                            "val/accuracy": val_acc,
-                            "epoch": epoch,
-                        },
-                        step=global_step,
-                    )
-
-        epoch_loss = epoch_loss / max(epoch_total, 1)
-        epoch_acc = epoch_correct / max(epoch_total, 1)
 
         if cfg.eval.run_at_epoch_end:
             val_loss, val_acc = evaluate(model, val_loader, criterion, device)
         else:
             val_loss, val_acc = 0.0, 0.0
 
+        # Log epoch metrics
         if cfg.wandb.enabled:
             wandb.log(
-                {
-                    "train/epoch_loss": epoch_loss,
-                    "train/epoch_accuracy": epoch_acc,
-                    "val/epoch_loss": val_loss,
-                    "val/epoch_accuracy": val_acc,
-                    "epoch": epoch,
-                }
-            )
+        {
+            "train/epoch_loss": train_loss,
+            "train/epoch_accuracy": train_acc,
+            "val/epoch_loss": val_loss,
+            "val/epoch_accuracy": val_acc,
+            "epoch": epoch,
+        })
 
         print(
             f"Epoch {epoch}/{cfg.train.epochs} "
-            f"train_loss={epoch_loss:.4f} train_acc={epoch_acc:.4f} "
+            f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
 

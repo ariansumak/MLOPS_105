@@ -1,5 +1,5 @@
 import typer
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 DATA_DIR = "data/chest_xray"
@@ -19,13 +19,13 @@ def get_dataloaders(
 
     Returns:
         train_loader, val_loader, test_loader
+
     """
     # Transforms
     if augment:
         train_transform = transforms.Compose(
             [
                 transforms.Resize((224, 224)),
-                # transforms.RandomHorizontalFlip(),
                 transforms.RandomRotation(5),
                 transforms.ColorJitter(brightness=0.1, contrast=0.1),
                 transforms.ToTensor(),
