@@ -131,16 +131,22 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
-def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool) -> None:
     """Save the model state dict to a checkpoint path.
 
     Args:
         model: Trained model to persist.
         checkpoint_path: Destination path for the checkpoint.
+        save_wandb: Whether to save the checkpoint as a wandb artifact.
     """
 
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), checkpoint_path)
+
+    if save_wandb:
+        artifact = wandb.Artifact(name="model_checkpoint", type="model")
+        artifact.add_file(str(checkpoint_path))
+        wandb.log_artifact(artifact)
 
 
 def train_epoch(
@@ -293,7 +299,7 @@ def train(cfg: DictConfig) -> None:
         )
 
     if cfg.train.save_checkpoint:
-        _save_checkpoint(model, Path(cfg.train.checkpoint_path))
+        _save_checkpoint(model, Path(cfg.train.checkpoint_path), cfg.wandb.enabled)
 
 
 if __name__ == "__main__":
