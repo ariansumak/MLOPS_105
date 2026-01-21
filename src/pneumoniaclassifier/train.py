@@ -223,17 +223,6 @@ def train_epoch(
             )
             model.train()
 
-    return epoch_loss, epoch_acc, global_step
-def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
-    """Save the model state dict to a checkpoint path.
-
-    Args:
-        model: Trained model to persist.
-        checkpoint_path: Destination path for the checkpoint.
-    """
-
-    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), checkpoint_path)
     avg_loss = total_loss / max(total, 1)
     accuracy = correct / max(total, 1)
     return avg_loss, accuracy, global_step
@@ -288,13 +277,14 @@ def train(cfg: DictConfig) -> None:
         # Log epoch metrics
         if cfg.wandb.enabled:
             wandb.log(
-        {
-            "train/epoch_loss": train_loss,
-            "train/epoch_accuracy": train_acc,
-            "val/epoch_loss": val_loss,
-            "val/epoch_accuracy": val_acc,
-            "epoch": epoch,
-        })
+                {
+                    "train/epoch_loss": train_loss,
+                    "train/epoch_accuracy": train_acc,
+                    "val/epoch_loss": val_loss,
+                    "val/epoch_accuracy": val_acc,
+                    "epoch": epoch,
+                }
+            )
 
         print(
             f"Epoch {epoch}/{cfg.train.epochs} "
