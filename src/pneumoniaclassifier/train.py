@@ -9,6 +9,7 @@ import torch
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import wandb
@@ -155,6 +156,91 @@ def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
 
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), checkpoint_path)
+
+
+def train_epoch(
+    model: nn.Module,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    epoch: int,
+    global_step: int,
+    log_interval_steps: int = 50,
+    eval_interval_steps: int = 200,
+    wandb_enabled: bool = False,
+    show_progress: bool = True,
+) -> tuple[float, float, int]:
+    """Run one epoch of training.
+
+    Args:
+        model: Model to train.
+        train_loader: Training dataloader.
+        val_loader: Validation dataloader for periodic evaluation.
+        criterion: Loss function.
+        optimizer: Optimizer instance.
+        device: Device for training.
+        epoch: Current epoch index.
+        global_step: Global step counter.
+        log_interval_steps: Steps between training logs.
+        eval_interval_steps: Steps between evaluation runs.
+        wandb_enabled: Whether to log metrics to Weights & Biases.
+        show_progress: Whether to display a tqdm progress bar.
+
+    Returns:
+        Tuple containing average training loss, training accuracy, and updated global step.
+    """
+
+    model.train()
+    total_loss = 0.0
+    correct = 0
+    total = 0
+
+    data_iter = train_loader
+    if show_progress:
+        data_iter = tqdm(train_loader, desc=f"Epoch {epoch}", dynamic_ncols=True, leave=False)
+
+    for inputs, targets in data_iter:
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+
+        optimizer.zero_grad(set_to_none=True)
+        outputs = model(inputs)
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
+
+        batch_size = inputs.size(0)
+        total_loss += loss.item() * batch_size
+        preds = outputs.argmax(dim=1)
+        correct += (preds == targets).sum().item()
+        total += batch_size
+        global_step += 1
+
+        if wandb_enabled and log_interval_steps > 0 and global_step % log_interval_steps == 0:
+            wandb.log(
+                {
+                    "train/step_loss": loss.item(),
+                    "train/step_accuracy": (preds == targets).float().mean().item(),
+                    "step": global_step,
+                }
+            )
+
+        if wandb_enabled and eval_interval_steps > 0 and global_step % eval_interval_steps == 0:
+            val_loss, val_acc = evaluate(model, val_loader, criterion, device)
+            wandb.log(
+                {
+                    "val/step_loss": val_loss,
+                    "val/step_accuracy": val_acc,
+                    "step": global_step,
+                }
+            )
+            model.train()
+
+    avg_loss = total_loss / max(total, 1)
+    accuracy = correct / max(total, 1)
+    return avg_loss, accuracy, global_step
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
