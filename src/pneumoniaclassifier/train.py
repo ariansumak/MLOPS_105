@@ -110,21 +110,6 @@ def _get_device(device: str) -> torch.device:
     return torch.device(device)
 
 
-# def _create_loader(
-#     dataset: MyDataset,
-#     batch_size: int,
-#     num_workers: int,
-#     shuffle: bool,
-# ) -> DataLoader:
-#     """Create a dataloader with consistent settings."""
-
-#     return DataLoader(
-#         dataset,
-#         batch_size=batch_size,
-#         shuffle=shuffle,
-#         num_workers=num_workers,
-#         pin_memory=torch.cuda.is_available(),
-#     )
 
 
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
@@ -238,6 +223,17 @@ def train_epoch(
             )
             model.train()
 
+    return epoch_loss, epoch_acc, global_step
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
+    """Save the model state dict to a checkpoint path.
+
+    Args:
+        model: Trained model to persist.
+        checkpoint_path: Destination path for the checkpoint.
+    """
+
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), checkpoint_path)
     avg_loss = total_loss / max(total, 1)
     accuracy = correct / max(total, 1)
     return avg_loss, accuracy, global_step
