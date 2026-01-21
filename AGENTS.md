@@ -15,6 +15,8 @@
     `tasks.py` file.
 * The project uses `pre-commit` for managing pre-commit hooks. To run all hooks on all files, use
     `uv run pre-commit run --all-files`. For more information, refer to the `.pre-commit-config.yaml` file.
+* The project uses `bentoml` for specialized model serving. To serve locally, use
+    `uv run bentoml serve src.pneumoniaclassifier.bento_service:PneumoniaClassifierService`.
 
 # Code style
 

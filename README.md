@@ -36,6 +36,19 @@ uv run uvicorn pneumoniaclassifier.api:app --app-dir src --host 0.0.0.0 --port 8
 
 If the checkpoint path is different, update `configs/inference.yaml` or set `PNEUMONIA_CONFIG`.
 
+### 3b) Run the backend (BentoML, M25)
+
+```bash
+uv run bentoml serve src.pneumoniaclassifier.bento_service:PneumoniaClassifierService
+```
+
+If the frontend runs on a different port, allow it via CORS:
+
+```bash
+PNEUMONIA_CORS_ORIGINS="http://localhost:8003,http://127.0.0.1:8003" \
+uv run bentoml serve src.pneumoniaclassifier.bento_service:PneumoniaClassifierService
+```
+
 ### 4) Run the frontend (Django)
 
 ```bash
