@@ -66,7 +66,7 @@ def link_model(
     typer.echo(f"Artifact name resolved: '{artifact_name}'")
 
     # Target path for linking in registry
-    target_path = f"{entity}/{project}/{artifact_name}"
+    target_path = f"{entity}-org/{project}/{artifact_name}"
     typer.echo(f"Linking artifact to: {target_path}")
 
     # Link artifact
