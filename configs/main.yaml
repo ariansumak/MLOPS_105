@@ -6,18 +6,20 @@ defaults:
   - _self_
 
 train:
-  epochs: 5
+  epochs: 2
   seed: 42
   device: auto
   output_dir: reports
   log_interval_steps: 50
+  save_checkpoint: true
+  checkpoint_path: models/m22_model.pt
 
 eval:
   interval_steps: 200
   run_at_epoch_end: true
 
 wandb:
-  enabled: false
+  enabled: true
   project: pneumoniaclassifier
   entity: null
   run_name: null
