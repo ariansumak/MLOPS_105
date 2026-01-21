@@ -56,6 +56,8 @@ class TrainLoopConfig:
     device: str = "auto"
     output_dir: Path = Path("reports")
     log_interval_steps: int = 50
+    save_checkpoint: bool = True
+    checkpoint_path: Path = Path("models/m22_model.pt")
 
 
 @dataclass
@@ -106,6 +108,8 @@ def _get_device(device: str) -> torch.device:
     if device == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return torch.device(device)
+
+
 
 
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
@@ -297,6 +301,16 @@ def train_epoch(
     epoch_acc = epoch_correct / max(epoch_total, 1)
 
     return epoch_loss, epoch_acc, global_step
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path) -> None:
+    """Save the model state dict to a checkpoint path.
+
+    Args:
+        model: Trained model to persist.
+        checkpoint_path: Destination path for the checkpoint.
+    """
+
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), checkpoint_path)
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
@@ -361,6 +375,9 @@ def train(cfg: DictConfig) -> None:
             f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
+
+    if cfg.train.save_checkpoint:
+        _save_checkpoint(model, Path(cfg.train.checkpoint_path))
 
 
 if __name__ == "__main__":
