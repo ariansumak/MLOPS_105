@@ -78,4 +78,4 @@ jobs:
 
     - name: Add production alias
       run: |
-        python src/pneumoniaclassifier/link_model.py $MODEL_NAME -a production
+        uv run python src/pneumoniaclassifier/link_model.py $MODEL_NAME -a production
