@@ -75,6 +75,7 @@ source = ["src"]
 omit = ["*/tests/*", "*/config/*"]
 
 [project.scripts]
-train = "pneumoniaclassifier.train:train"
-evaluate = "pneumoniaclassifier.evaluate:evaluate"
-data-check = "pneumoniaclassifier.data:get_dataloaders"
+# Format: executable_name = "package.module:function_or_app"
+train = "pneumoniaclassifier.train:app"
+evaluate = "pneumoniaclassifier.evaluate:app"
+data-check = "pneumoniaclassifier.data:app"
