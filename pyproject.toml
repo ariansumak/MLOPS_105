@@ -43,6 +43,9 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/dtu_frontend"]
+
 [tool.ruff]
 line-length = 120
 select = [
@@ -90,7 +93,10 @@ source = ["src"]
 omit = ["*/tests/*", "*/config/*"]
 
 [project.scripts]
-# Format: executable_name = "package.module:function_or_app"
 train = "pneumoniaclassifier.train:app"
 evaluate = "pneumoniaclassifier.evaluate:app"
 data-check = "pneumoniaclassifier.data:app"
+data-stats = "pneumoniaclassifier.data_statistics:app"
+link-model = "pneumoniaclassifier.link_model:app"
+serve-api = "pneumoniaclassifier.api:cli_app"
+frontend = "dtu_frontend.cli_frontend:app"

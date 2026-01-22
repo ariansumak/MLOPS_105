@@ -1,8 +1,10 @@
 """Dataset statistics and visualization utilities."""
 
 from __future__ import annotations
-
+import typer
 from pathlib import Path
+
+app = typer.Typer()
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -187,6 +189,11 @@ def _plot_sample_images(data_dir: Path, num_samples_per_class: int = 3) -> None:
     print(f"✓ Sample images plot saved to {output_path}")
     plt.close()
 
+@app.command()
+def stats(data_dir: str = "data/chest_xray"):
+    """Analyze and visualize dataset statistics."""
+    from pneumoniaclassifier.data_statistics import dataset_statistics
+    dataset_statistics(data_dir=data_dir)
 
 if __name__ == "__main__":
-    dataset_statistics()
+    app()
