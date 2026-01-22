@@ -15,7 +15,7 @@ COPY uv.lock uv.lock
 COPY README.md README.md
 COPY src/ src/
 COPY configs/ configs/
-COPY .dvc/config .dvc/config
+COPY .dvc/ .dvc/
 COPY .dvcignore .dvcignore
 COPY data.dvc data.dvc
 
