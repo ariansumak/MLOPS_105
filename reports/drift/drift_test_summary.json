@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Share of Missing Values",
+      "description": "The share of missing values is 0. The test threshold is lte=0 \u00b1 1e-12.",
+      "status": "SUCCESS",
+      "group": "data_integrity",
+      "parameters": {
+        "condition": {
+          "lte": {
+            "value": 0.0,
+            "relative": 0.1,
+            "absolute": 1e-12
+          }
+        },
+        "value": 0.0
+      }
+    }
+  ],
+  "summary": {
+    "all_passed": true,
+    "total_tests": 1,
+    "success_tests": 1,
+    "failed_tests": 0,
+    "by_status": {
+      "SUCCESS": 1
+    }
+  }
+}

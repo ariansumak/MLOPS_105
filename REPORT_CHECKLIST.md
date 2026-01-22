@@ -83,10 +83,10 @@ will check the repositories and the code to verify your answers.
 * [x] Add caching and multi-os/python/pytorch testing to your continuous integration (M17)
 * [ ] Add a linting step to your continuous integration (M17)
 * [ ] Add pre-commit hooks to your version control setup (M18)
-* [ ] Add a continues workflow that triggers when data changes (M19)
-* [ ] Add a continues workflow that triggers when changes to the model registry is made (M19)
+* [x] Add a continues workflow that triggers when data changes (M19)
+* [x] Add a continues workflow that triggers when changes to the model registry is made (M19)
 * [x] Create a data storage in GCP Bucket for your data and link this with your data version control setup (M21)
-* [ ] Create a trigger workflow for automatically building your docker images (M21)
+* [x] Create a trigger workflow for automatically building your docker images (M21)
 * [x] Get your model training in GCP using either the Engine or Vertex AI (M21)
 * [x] Create a FastAPI application that can do inference using your model (M22)
 * [ ] Deploy your model in GCP using either Functions or Run as the backend (M23)
@@ -97,7 +97,7 @@ will check the repositories and the code to verify your answers.
 
 ### Week 3
 
-* [ ] Check how robust your model is towards data drifting (M27)
+* [x] Check how robust your model is towards data drifting (M27)
 * [ ] Setup collection of input-output data from your deployed application (M27)
 * [ ] Deploy to the cloud a drift detection API (M27)
 * [x] Instrument your API with a couple of system metrics (M28)
