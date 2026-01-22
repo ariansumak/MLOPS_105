@@ -20,8 +20,8 @@ COPY uv.lock uv.lock
 # Install Python dependencies
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-EXPOSE 8000
+EXPOSE 8080
 
 
 # Default: FastAPI
-CMD ["uv", "run", "uvicorn", "pneumoniaclassifier.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "pneumoniaclassifier.api:app", "--host", "0.0.0.0", "--port", "8080"]
