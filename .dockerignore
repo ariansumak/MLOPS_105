@@ -1,0 +1,10 @@
+.dvc/cache
+.dvc/tmp
+data/
+
+# Git
+.git
+
+# Python
+__pycache__/
+*.pyc

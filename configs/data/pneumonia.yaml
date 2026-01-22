@@ -1,5 +1,5 @@
 _target_: pneumoniaclassifier.data.get_dataloaders
-data_dir: "${oc.env:DATA_DIR,data/chest_xray}"
+data_dir: "data/chest_xray"
 batch_size: 16
 num_workers: 2
 augment: true
