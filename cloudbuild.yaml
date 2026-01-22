@@ -26,7 +26,7 @@ steps:
     '-t',
     'europe-west1-docker.pkg.dev/$PROJECT_ID/docker-registry/pneumonia-api',
     '-f',
-    'dockerfiles/api.dockerfile'
+    'dockerfiles/backend.dockerfile'
   ]
   env:
     - 'DOCKER_BUILDKIT=1'
