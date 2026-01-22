@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 RUN apt update && \
-        apt install --no-install-recommends -y build-essential gcc && \
+        apt install --no-install-recommends -y build-essential gcc git && \
         apt clean && rm -rf /var/lib/apt/lists/*
 
 # Use a project directory inside the image
@@ -15,8 +15,16 @@ COPY uv.lock uv.lock
 COPY README.md README.md
 COPY src/ src/
 COPY configs/ configs/
+COPY .dvc/ .dvc/
+COPY .dvcignore .dvcignore
+COPY data.dvc data.dvc
 
+# Install Python dependencies
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-ENTRYPOINT ["uv","run","python","-m","pneumoniaclassifier.train"]
+
+# Pull data at runtime, not build time
+# DVC will use configuration from .dvc/config
+# GCP credentials are available via service account
+ENTRYPOINT ["sh", "-c", "uv run dvc pull && uv run python -m pneumoniaclassifier.train"]
 

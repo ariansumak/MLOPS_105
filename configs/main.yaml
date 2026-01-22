@@ -11,6 +11,8 @@ train:
   device: auto
   output_dir: reports
   log_interval_steps: 50
+  save_checkpoint: true
+  checkpoint_path: models/m22_model.pt
 
 eval:
   interval_steps: 200
@@ -22,3 +24,4 @@ wandb:
   entity: null
   run_name: null
   log_model: false
+  model_name: model1

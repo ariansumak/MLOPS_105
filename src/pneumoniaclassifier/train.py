@@ -15,7 +15,7 @@ from tqdm import tqdm
 import typer
 import wandb
 from pneumoniaclassifier.evaluate import evaluate
-from pneumoniaclassifier.model import _build_model, _set_trainable_layers
+from pneumoniaclassifier.modeling import build_model, set_trainable_layers
 
 app = typer.Typer()
 
@@ -58,6 +58,8 @@ class TrainLoopConfig:
     device: str = "auto"
     output_dir: Path = Path("reports")
     log_interval_steps: int = 50
+    save_checkpoint: bool = True
+    checkpoint_path: Path = Path("models/m22_model.pt")
 
 
 @dataclass
@@ -86,6 +88,7 @@ class WandbConfig:
     entity: str | None = None
     run_name: str | None = None
     log_model: bool = False
+    model_name: str = "model1"
 
 
 @dataclass
@@ -110,6 +113,8 @@ def _get_device(device: str) -> torch.device:
     return torch.device(device)
 
 
+
+
 def _filter_trainable_parameters(model: nn.Module) -> Iterable[nn.Parameter]:
     """Return parameters that require gradients."""
     return (param for param in model.parameters() if param.requires_grad)
@@ -129,80 +134,25 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
-def log_step_metrics(
-    step_loss: float,
-    step_acc: float,
-    epoch: int,
-    global_step: int,
-    wandb_enabled: bool = True,
-) -> None:
-    """
-    Log step-level training metrics to Weights & Biases.
+def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool, model_name: str) -> None:
+    """Save the model state dict to a checkpoint path.
 
     Args:
-        step_loss: Loss value for the current step
-        step_acc: Accuracy for the current step
-        epoch: Current epoch number
-        global_step: Global training step number
-        wandb_enabled: Whether to actually log (allows disabling for tests)
-
+        model: Trained model to persist.
+        checkpoint_path: Destination path for the checkpoint.
+        save_wandb: Whether to save the checkpoint as a wandb artifact.
     """
-    if not wandb_enabled:
-        return
 
-    wandb.log(
-        {
-            "train/step_loss": step_loss,
-            "train/step_accuracy": step_acc,
-            "epoch": epoch,
-        },
-        step=global_step,
-    )
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), checkpoint_path)
 
-
-def evaluate_and_log(
-    model: nn.Module,
-    val_loader: DataLoader,
-    criterion: nn.Module,
-    device: torch.device,
-    epoch: int,
-    global_step: int,
-    wandb_enabled: bool = True,
-) -> tuple[float, float]:
-    """
-    Evaluate the model and log validation metrics.
-
-    Args:
-        model: Model to evaluate
-        val_loader: Validation data loader
-        criterion: Loss function
-        device: Device to run evaluation on
-        epoch: Current epoch number
-        global_step: Global training step number
-        wandb_enabled: Whether to log to wandb
-
-    Returns:
-        Tuple of (validation_loss, validation_accuracy)
-
-    """
-    val_loss, val_acc = evaluate(model, val_loader, criterion, device)
-
-    if wandb_enabled:
-        wandb.log(
-            {
-                "val/loss": val_loss,
-                "val/accuracy": val_acc,
-                "epoch": epoch,
-            },
-            step=global_step,
-        )
-
-    return val_loss, val_acc
-
-
-# ============================================================================
-# Epoch Training Function (core training logic)
-# ============================================================================
+    if save_wandb:
+        if wandb.run is None:
+            raise RuntimeError("wandb.init() must be called before saving checpoints to wandb")
+        artifact = wandb.Artifact(name=model_name, type="model")
+        artifact.add_file(str(checkpoint_path))
+        wandb.run.log_artifact(artifact)
+        wandb.run.link_artifact(artifact=artifact, target_path="s253819-danmarks-tekniske-universitet-dtu-org/wandb-registry-pneumonia_models/models", aliases=["latest", "code"])
 
 
 def train_epoch(
@@ -216,89 +166,78 @@ def train_epoch(
     global_step: int,
     log_interval_steps: int = 50,
     eval_interval_steps: int = 200,
-    wandb_enabled: bool = True,
+    wandb_enabled: bool = False,
     show_progress: bool = True,
 ) -> tuple[float, float, int]:
-    """
-    Train for one epoch with logging and validation.
+    """Run one epoch of training.
 
     Args:
-        model: Model to train
-        train_loader: Training data loader
-        val_loader: Validation data loader
-        criterion: Loss function
-        optimizer: Optimizer
-        device: Device to train on
-        epoch: Current epoch number
-        global_step: Starting global step number
-        log_interval_steps: Log metrics every N steps (0 to disable)
-        eval_interval_steps: Run validation every N steps (0 to disable)
-        wandb_enabled: Whether to log to wandb
-        show_progress: Whether to show tqdm progress bar
+        model: Model to train.
+        train_loader: Training dataloader.
+        val_loader: Validation dataloader for periodic evaluation.
+        criterion: Loss function.
+        optimizer: Optimizer instance.
+        device: Device for training.
+        epoch: Current epoch index.
+        global_step: Global step counter.
+        log_interval_steps: Steps between training logs.
+        eval_interval_steps: Steps between evaluation runs.
+        wandb_enabled: Whether to log metrics to Weights & Biases.
+        show_progress: Whether to display a tqdm progress bar.
 
     Returns:
-        Tuple of (epoch_loss, epoch_accuracy, final_global_step)
-
+        Tuple containing average training loss, training accuracy, and updated global step.
     """
+
     model.train()
+    total_loss = 0.0
+    correct = 0
+    total = 0
 
-    epoch_loss = 0.0
-    epoch_correct = 0
-    epoch_total = 0
-
-    iterator = train_loader
+    data_iter = train_loader
     if show_progress:
-        iterator = tqdm(
-            train_loader,
-            desc=f"Epoch {epoch} [train]",
-            dynamic_ncols=True,
-            leave=False,
-        )
+        data_iter = tqdm(train_loader, desc=f"Epoch {epoch}", dynamic_ncols=True, leave=False)
 
-    for inputs, targets in iterator:
-        global_step += 1
+    for inputs, targets in data_iter:
         inputs = inputs.to(device)
         targets = targets.to(device)
 
-        # Forward pass
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         outputs = model(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
 
-        # Calculate metrics
-        batch_size = targets.size(0)
+        batch_size = inputs.size(0)
+        total_loss += loss.item() * batch_size
         preds = outputs.argmax(dim=1)
-        step_loss = loss.item()
-        step_acc = (preds == targets).float().mean().item()
+        correct += (preds == targets).sum().item()
+        total += batch_size
+        global_step += 1
 
-        # Accumulate epoch metrics
-        epoch_loss += step_loss * batch_size
-        epoch_correct += (preds == targets).sum().item()
-        epoch_total += batch_size
-
-        # Update progress bar
-        if show_progress:
-            iterator.set_postfix(
-                loss=f"{step_loss:.4f}",
-                acc=f"{step_acc:.4f}",
+        if wandb_enabled and log_interval_steps > 0 and global_step % log_interval_steps == 0:
+            wandb.log(
+                {
+                    "train/step_loss": loss.item(),
+                    "train/step_accuracy": (preds == targets).float().mean().item(),
+                    "step": global_step,
+                }
             )
 
-        # Log step metrics
-        if log_interval_steps > 0 and global_step % log_interval_steps == 0:
-            log_step_metrics(step_loss, step_acc, epoch, global_step, wandb_enabled)
+        if wandb_enabled and eval_interval_steps > 0 and global_step % eval_interval_steps == 0:
+            val_loss, val_acc = evaluate(model, val_loader, criterion, device)
+            wandb.log(
+                {
+                    "val/step_loss": val_loss,
+                    "val/step_accuracy": val_acc,
+                    "step": global_step,
+                }
+            )
+            model.train()
 
-        # Run intermediate validation
-        if eval_interval_steps > 0 and global_step % eval_interval_steps == 0:
-            evaluate_and_log(model, val_loader, criterion, device, epoch, global_step, wandb_enabled)
-            model.train()  # Switch back to training mode
-
-    # Calculate epoch averages
-    epoch_loss = epoch_loss / max(epoch_total, 1)
-    epoch_acc = epoch_correct / max(epoch_total, 1)
-
-    return epoch_loss, epoch_acc, global_step
+    avg_loss = total_loss / max(total, 1)
+    accuracy = correct / max(total, 1)
+    return avg_loss, accuracy, global_step
 
 @app.command()
 def train_wrapper():
@@ -314,12 +253,12 @@ def train(cfg: DictConfig) -> None:
 
     train_loader, val_loader, _ = hydra.utils.instantiate(cfg.data)
 
-    model = _build_model(
+    model = build_model(
         model_name=cfg.model.name,
         num_classes=cfg.model.num_classes,
         pretrained=cfg.model.pretrained,
     )
-    _set_trainable_layers(model, cfg.model.unfreeze_blocks)
+    set_trainable_layers(model, cfg.model.unfreeze_blocks)
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
@@ -354,19 +293,23 @@ def train(cfg: DictConfig) -> None:
         # Log epoch metrics
         if cfg.wandb.enabled:
             wandb.log(
-        {
-            "train/epoch_loss": train_loss,
-            "train/epoch_accuracy": train_acc,
-            "val/epoch_loss": val_loss,
-            "val/epoch_accuracy": val_acc,
-            "epoch": epoch,
-        })
+                {
+                    "train/epoch_loss": train_loss,
+                    "train/epoch_accuracy": train_acc,
+                    "val/epoch_loss": val_loss,
+                    "val/epoch_accuracy": val_acc,
+                    "epoch": epoch,
+                }
+            )
 
         print(
             f"Epoch {epoch}/{cfg.train.epochs} "
             f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
+
+    if cfg.train.save_checkpoint:
+        _save_checkpoint(model, Path(cfg.train.checkpoint_path), cfg.wandb.enabled, cfg.wandb.model_name)
 
 
 if __name__ == "__main__":
