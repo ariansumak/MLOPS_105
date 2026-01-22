@@ -6,14 +6,15 @@ from pathlib import Path
 import time
 
 import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from omegaconf import DictConfig, OmegaConf
 from pydantic import BaseModel
 from PIL import Image
 from torchvision import transforms
 
-from prometheus_client import Counter, Histogram, make_asgi_app
+from prometheus_client import Counter, Histogram, make_asgi_app, generate_latest, CONTENT_TYPE_LATEST
+
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
 
@@ -135,8 +136,13 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="Pneumonia Classifier API", version="0.1.0")
 
-    metrics_app = make_asgi_app()
-    app.mount("/metrics", metrics_app)
+    @app.get("/metrics")
+    def metrics():
+        """Expose Prometheus metrics."""
+        return Response(
+            generate_latest(), 
+            media_type=CONTENT_TYPE_LATEST
+        )
 
     cors_origins = _get_cors_origins()
     if cors_origins:

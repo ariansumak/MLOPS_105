@@ -1,0 +1,29 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: pneumonia-classifier-service
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    spec:
+      containers:
+        # Container 1: Your FastAPI App
+        - image: gcr.io/YOUR_PROJECT_ID/pneumonia-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+
+        # Container 2: The OTEL Sidecar
+        - image: otel/opentelemetry-collector-contrib
+          args:
+            - "--config=/etc/otelcol/config.yaml"
+          volumeMounts:
+            - name: otel-config-volume
+              mountPath: /etc/otelcol
+      volumes:
+        - name: otel-config-volume
+          secret:
+            secretName: otel-config
