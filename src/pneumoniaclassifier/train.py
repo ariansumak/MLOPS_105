@@ -86,6 +86,7 @@ class WandbConfig:
     entity: str | None = None
     run_name: str | None = None
     log_model: bool = False
+    model_name: str = "model1"
 
 
 @dataclass
