@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
+import time
 
 import torch
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -11,6 +12,8 @@ from omegaconf import DictConfig, OmegaConf
 from pydantic import BaseModel
 from PIL import Image
 from torchvision import transforms
+
+from prometheus_client import Counter, Histogram, make_asgi_app
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
 
@@ -101,6 +104,24 @@ def _load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
     )
     return load_model_from_checkpoint(model, checkpoint_path, device)
 
+PREDICTION_COUNTER = Counter(
+    "pneumonia_predictions_total", 
+    "Total number of predictions", 
+    ["label"]
+)
+
+# Track how long the inference takes
+INFERENCE_LATENCY = Histogram(
+    "pneumonia_inference_duration_seconds", 
+    "Time spent performing model inference"
+)
+
+# Track errors (e.g., invalid images)
+ERROR_COUNTER = Counter(
+    "pneumonia_prediction_errors_total", 
+    "Total number of prediction errors",
+    ["error_type"]
+)
 
 def create_app() -> FastAPI:
     """Create the FastAPI application."""
@@ -113,6 +134,10 @@ def create_app() -> FastAPI:
     class_names = list(cfg.inference.class_names)
 
     app = FastAPI(title="Pneumonia Classifier API", version="0.1.0")
+
+    metrics_app = make_asgi_app()
+    app.mount("/metrics", metrics_app)
+
     cors_origins = _get_cors_origins()
     if cors_origins:
         app.add_middleware(
@@ -158,16 +183,24 @@ def create_app() -> FastAPI:
         try:
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         except OSError as exc:
+            ERROR_COUNTER.labels(error_type="image_decode_error").inc()
             raise HTTPException(status_code=400, detail="Invalid image file.") from exc
-
+        
         tensor = app.state.transform(image).unsqueeze(0).to(app.state.device)
+
+        start_time = time.time()
+
         with torch.inference_mode():
             logits = app.state.model(tensor)
             probs = torch.softmax(logits, dim=1).squeeze(0)
 
+        INFERENCE_LATENCY.observe(time.time() - start_time)
+
         confidence, index = torch.max(probs, dim=0)
         label = app.state.class_names[int(index)]
         probabilities = {name: float(probs[i]) for i, name in enumerate(app.state.class_names)}
+
+        PREDICTION_COUNTER.labels(label=label).inc()
 
         return PredictionResponse(
             label=label,
