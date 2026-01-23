@@ -1,16 +1,13 @@
-To include your new Django frontend CLI, we need to update the **Command Reference** table and add a specific section for **Frontend Development**. This ensures that anyone working on the project knows they can manage both the ML backend and the Web frontend through the same `uv run` interface.
+# 🛠️ Pneumonia Classifier CLI & Automation Guide
 
----
-
-# 🛠️ Pneumonia Classifier CLI Guide
-
-This project provides a unified Command Line Interface (CLI) built with **Typer** and **uv** to manage the full machine learning lifecycle and the web frontend.
+This project features a unified Command Line Interface (CLI) built with **Typer**, **uv**, and **Invoke**. It standardizes how we interact with the ML backend, the Django frontend, and external tools like DVC and Git.
 
 ## 🚀 Getting Started
 
-Before running any commands, ensure your project is installed in **editable mode**. This registers the shortcuts defined in `pyproject.toml`.
+Ensure your environment is synced and the local packages are registered in **editable mode**:
 
 ```bash
+uv sync
 uv pip install -e .
 
 ```
@@ -19,76 +16,78 @@ uv pip install -e .
 
 ## 📖 Command Reference
 
-| Category     | Task           | Command                   | Description                                         |
-| ------------ | -------------- | ------------------------- | --------------------------------------------------- |
-| **Backend**  | **Data Check** | `uv run data-check`       | Verifies data loading and outputs sample counts.    |
-| **Backend**  | **Data Stats** | `uv run data-stats`       | Generates distribution plots in `reports/figures/`. |
-| **Backend**  | **Training**   | `uv run train`            | Starts the model training pipeline (uses Hydra).    |
-| **Backend**  | **Evaluation** | `uv run evaluate`         | Evaluates a checkpoint on the test set.             |
-| **Backend**  | **API Server** | `uv run serve-api`        | Starts the FastAPI inference server.                |
-| **Frontend** | **Dev Server** | `uv run frontend dev`     | Starts the Django development server.               |
-| **Frontend** | **Database**   | `uv run frontend migrate` | Runs Django database migrations.                    |
-| **Frontend** | **Full Setup** | `uv run frontend setup`   | Migrates the DB and starts the server in one go.    |
+### 1. Python Entry Points (`uv run`)
+
+These are high-level shortcuts defined in `pyproject.toml`. They handle argument validation and provide `--help` menus.
+
+| Category     | Task           | Command                 | Description                                         |
+| ------------ | -------------- | ----------------------- | --------------------------------------------------- |
+| **Backend**  | **Data Check** | `uv run data-check`     | Verifies data loading and outputs sample counts.    |
+| **Backend**  | **Data Stats** | `uv run data-stats`     | Generates distribution plots in `reports/figures/`. |
+| **Backend**  | **Training**   | `uv run train`          | Starts model training (Hydra-based).                |
+| **Backend**  | **Evaluation** | `uv run evaluate`       | Evaluates a checkpoint on the test set.             |
+| **Backend**  | **API Server** | `uv run serve-api`      | Starts the FastAPI inference server.                |
+| **Frontend** | **Dev Server** | `uv run frontend dev`   | Starts the Django development server.               |
+| **Frontend** | **Full Setup** | `uv run frontend setup` | Migrates DB and starts server in one step.          |
+
+### 2. Automation Tasks (`invoke`)
+
+These are "Task Runner" commands located in `tasks.py`. They automate multi-step workflows involving Git, DVC, and environment setup.
+
+| Task             | Command                                             | Description                                           |
+| ---------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| **Python Check** | `uv run invoke python-check`                        | Verifies which Python interpreter is being used.      |
+| **Git Push**     | `uv run invoke git --message "your message"`        | Automates `add`, `commit`, and `push`.                |
+| **DVC Workflow** | `uv run invoke dvc --folder 'data' --message 'msg'` | Adds data to DVC, commits metadata, and pushes.       |
+| **Pull Data**    | `uv run invoke pull-data`                           | Downloads data from DVC remote.                       |
+| **Full Train**   | `uv run invoke train --epochs 5`                    | **Chained:** Runs `dvc pull` then starts training.    |
+| **Dev Servers**  | `uv run invoke dev`                                 | Starts both API (port 8000) and Frontend (port 8001). |
+
+> **Tip:** You can use the alias `uvi` for `uv run invoke` to save keystrokes.
+> **Note:** On Windows, the `dev` task is best run in separate terminals due to backgrounding limitations.
 
 ---
 
-## 🖥️ Frontend Management
+## ⚙️ Project Structure & Logic
 
-The frontend is built with Django but managed via the `frontend` CLI wrapper. You no longer need to call `manage.py` directly.
+To maintain this CLI, we utilize a **`src` layout**. This ensures code quality by separating the installed package from the project root.
 
-- **Start the Web Interface:**
+### Configuration Checklist
 
-```bash
-uv run frontend dev --port 8001
+If you add a new module or package, ensure the following are updated:
 
-```
-
-- **Initial Setup (First time running):**
-  If you just cloned the repo or updated the database schema, use the setup command:
-
-```bash
-uv run frontend setup
-
-```
+1. **`pyproject.toml`**: Update `[tool.setuptools]` to include the new package in `package-dir`.
+2. **`__init__.py`**: Every new folder in `src/` must contain this file to be importable.
+3. **Entry Points**: Add the function mapping under `[project.scripts]`.
 
 ---
 
-## 🧪 How to Test Your CLI Implementation
+## 🧪 Verification & Testing
 
-### 1. Test the "Help" System
+### 1. The "Help" Check
 
-Verify that the frontend subcommands are correctly registered.
+Verify that Typer is correctly parsing docstrings for the help menu:
 
 ```bash
 uv run frontend --help
 
 ```
 
-### 2. Verify Port Configuration
+### 2. Integration Test (Full Stack)
 
-Test if the Typer argument for the port is working correctly.
+To verify the system is working end-to-end, open two terminals and run:
+
+- **Terminal 1 (Backend):** `uv run serve-api --port 8000`
+- **Terminal 2 (Frontend):** `uv run frontend dev --port 8001`
+
+### 3. Task Chaining Check
+
+Verify that Invoke successfully pulls data before training:
 
 ```bash
-uv run frontend dev --port 8888
-# Check if the terminal says: Starting server at http://127.0.0.1:8888/
+uv run invoke train
+# Observe if 'dvc pull' is logged before training starts.
 
 ```
 
-### 3. Verify Integration
-
-Test that you can run the API and the Frontend simultaneously in two different terminals to ensure they don't have port conflicts.
-
-- **Terminal 1:** `uv run serve-api --port 8000`
-- **Terminal 2:** `uv run frontend dev --port 8001`
-
 ---
-
-## ⚠️ Maintenance Note
-
-If you add new Django management commands or backend scripts, remember to:
-
-1. Update the `app` object in the respective `cli.py` or script file.
-2. Ensure the entry point is correctly mapped in `pyproject.toml`.
-3. Re-run `uv pip install -e .` to refresh the links.
-
-**Would you like me to help you add a section to this README on how to use `invoke` for multi-step automation (like starting the API and Frontend together)?**
