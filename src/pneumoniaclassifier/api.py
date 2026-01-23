@@ -14,6 +14,7 @@ from PIL import Image
 from torchvision import transforms
 
 from prometheus_client import Counter, Histogram, make_asgi_app, generate_latest, CONTENT_TYPE_LATEST
+import uvicorn
 
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
