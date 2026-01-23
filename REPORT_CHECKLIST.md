@@ -120,27 +120,21 @@ will check the repositories and the code to verify your answers.
 
 ### Question 1
 > **Enter the group number you signed up on <learn.inside.dtu.dk>**
+
 105
 
 
 ### Question 2
 > **Enter the study number for each member in the group**
+
 s252552, s253819, s253470, s254629
 
 
 ### Question 3
 > **Did you end up using any open-source frameworks/packages not covered in the course during your project? If so**
 > **which did you use and how did they help you complete the project?**
->
-> Recommended answer length: 0-200 words.
->
-> Example:
-> *We used the third-party framework ... in our project. We used functionality ... and functionality ... from the*
-> *package to do ... and ... in our project*.
->
-> Answer:
 
---- question 3 fill here ---
+No, all frameworks used in this project are mentioned in the course's Github Pages.
 
 ## Coding environment
 
@@ -187,22 +181,18 @@ We filled out and actively used the following parts of the template:
 
 We have slightly deviated from the template, having removed the following directories:
 
-* **data/** - The original data/ directory was intentionally removed from Git tracking and replaced by DVC-based data versioning. Large image datasets are not suitable for Git, so we use DVC to store the data in a remote bucket in  Google Cloud Platform while committing only the corresponding .dvc metadata files. This ensures that all team members can retrieve the exact same dataset using **dvc pull**  , without inflating the repository size.
+* **data/** - The original data/ directory was intentionally removed from Git tracking and replaced by DVC-based data versioning. Large image datasets are not suitable for Git, so we use DVC to store the data in a remote bucket in  Google Cloud Platform while committing only the corresponding .dvc metadata files. This ensures that all team members can retrieve the exact same dataset using ``dvc pull``, without inflating the repository size.
 
 ### Question 6
 
 > **Did you implement any rules for code quality and format? What about typing and documentation? Additionally,**
 > **explain with your own words why these concepts matters in larger projects.**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *We used ... for linting and ... for formatting. We also used ... for typing and ... for documentation. These*
-> *concepts are important in larger projects because ... . For example, typing ...*
->
-> Answer:
 
---- question 6 fill here ---
+We did not use automated linting or formatting tools, nor did we generate formal documentation with frameworks like Sphinx or MkDocs. Instead, we focused on **practical internal measures** to ensure code clarity and maintainability. We wrote several **Markdown files** explaining the functionality of different parts of the project, and we added **docstrings** to all functions to describe their purpose, parameters, and expected outputs.  
+
+Additionally, we used **Python type hints** to specify input and output types for functions. For example, in `get_dataloaders`, we indicate that `data_dir` is a string, `batch_size` and `num_workers` are integers, `augment` is a boolean, and the function returns a tuple of three `DataLoader` objects.  
+
+These practices are important in larger projects because they **reduce misunderstandings, prevent errors, and make it easier for team members to navigate the codebase**. For instance, type hints allow developers to quickly understand what kinds of inputs and outputs functions expect, and docstrings provide immediate context for how to use each function without reading the full implementation. Together, these practices improve **collaboration, reproducibility, and maintainability**.
 
 ## Version control
 
@@ -293,16 +283,13 @@ An example of a triggered workflow can be seen here: https://github.com/ariansum
 
 > **Reproducibility of experiments are important. Related to the last question, how did you secure that no information**
 > **is lost when running experiments and that your experiments are reproducible?**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *We made use of config files. Whenever an experiment is run the following happens: ... . To reproduce an experiment*
-> *one would have to do ...*
->
-> Answer:
 
---- question 13 fill here ---
+To ensure reproducibility of our experiments, we relied on **Hydra configuration files** and **Weights & Biases (wandb)** logging. Hydra configs store all parameters related to an experiment, including data paths, model architecture, training hyperparameters, and inference settings. By using these config files, we can recreate any past experiment simply by re-running the training code with the same configuration.  
+
+During training, we logged all metrics, losses, and model checkpoints using **wandb**, which allows us to track experiments over time and compare results easily. Each run is associated with its exact configuration and environment, preventing loss of information and enabling consistent reproduction of results.  
+
+To reproduce an experiment, one would need to retrieve the corresponding Hydra config and run the training script with the same random seeds and environment setup. The combination of **structured configuration and systematic experiment tracking** ensures that our experiments are fully reproducible and results are never lost.
+
 
 ### Question 14
 
@@ -325,31 +312,25 @@ An example of a triggered workflow can be seen here: https://github.com/ariansum
 
 > **Docker is an important tool for creating containerized applications. Explain how you used docker in your**
 > **experiments/project? Include how you would run your docker images and include a link to one of your docker files.**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *For our project we developed several images: one for training, inference and deployment. For example to run the*
-> *training docker image: `docker run trainer:latest lr=1e-3 batch_size=64`. Link to docker file: <weblink>*
->
-> Answer:
 
---- question 15 fill here ---
+For our project, we developed several Docker images to support **training, inference, and monitoring**. Each image is based on a lightweight Python 3.13 slim environment with essential build tools installed.  
+
+The **training image** (`train.dockerfile`) installs dependencies, initializes DVC without SCM, and pulls the dataset at runtime. This ensures that training is fully reproducible across machines.  
+
+The **backend API image** (`backend.dockerfile`) exposes endpoints via FastAPI for health checks and predictions, while separate images for the **API** (`api.dockerfile`) and **drift monitoring** (`drift_monitor.dockerfile`) serve their respective endpoints using Uvicorn.  
+
+All Dockerfiles leverage **UV for dependency management** and caching to speed up builds, and **DVC for data versioning**, pulling the dataset only at runtime rather than at build time.  
+
+An example Dockerfile can be seen here: [train.dockerfile](https://github.com/ariansumak/MLOPS_105/blob/main/dockerfiles/train.dockerfile)
 
 ### Question 16
 
-> **When running into bugs while trying to run your experiments, how did you perform debugging? Additionally, did you**
-> **try to profile your code or do you think it is already perfect?**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *Debugging method was dependent on group member. Some just used ... and others used ... . We did a single profiling*
-> *run of our main code at some point that showed ...*
->
-> Answer:
+When running into bugs during experiments, we primarily used **Python’s built-in debugger, `pdb`**, to step through the code and inspect the flow of execution. This allowed us to pause the program at specific points, examine variable values, and understand where the logic was failing. In addition, we frequently used **strategic print statements** to quickly check intermediate outputs and verify that data and model behavior matched our expectations. These combined methods were simple but effective for identifying issues in both data processing and model training.  
 
---- question 16 fill here ---
+We did not perform formal code profiling due to time constraints, so we cannot claim that the code is fully optimized. While the code generally runs efficiently for our datasets and experiments, there are likely areas for improvement in memory usage and runtime performance. We recognize that profiling and performance tuning are important, especially in larger-scale experiments, and would be necessary for production deployments or processing larger datasets.  
+
+Overall, our debugging approach focused on **clarity, understanding, and incremental problem-solving**, rather than assuming the code was perfect.
+
 
 ## Working in the cloud
 
@@ -431,16 +412,14 @@ An example of a triggered workflow can be seen here: https://github.com/ariansum
 
 > **Did you manage to write an API for your model? If yes, explain how you did it and if you did anything special. If**
 > **not, explain how you would do it.**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *We did manage to write an API for our model. We used FastAPI to do this. We did this by ... . We also added ...*
-> *to the API to make it more ...*
->
-> Answer:
 
---- question 23 fill here ---
+Yes, we implemented an API for our Pneumonia Classifier model using **FastAPI**. The API provides endpoints for **health checks** and **image prediction**, allowing users to interact with the model in a standardized way.  
+
+We structured the API so that the model, preprocessing transforms, device, and configuration are **loaded once at startup** and stored in the application state. This ensures that subsequent requests can reuse these resources efficiently, improving performance. The `/predict` endpoint accepts image uploads, validates the file type, applies preprocessing, runs inference on the model, and returns the predicted label, confidence score, and class probabilities.  
+
+Additionally, we implemented **background logging** of predictions, so that inference metadata is saved without blocking the main request, improving responsiveness. The API also includes **CORS middleware**, allowing requests from specified origins, and provides a **root endpoint** with information about available endpoints for easy navigation.  
+
+To launch the service, we provide a **CLI command using Typer** that runs the FastAPI server with optional host and port arguments. This setup makes the API both user-friendly and production-ready. 
 
 ### Question 24
 
