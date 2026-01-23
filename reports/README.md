@@ -99,10 +99,10 @@ will check the repositories and the code to verify your answers.
 
 * [x] Check how robust your model is towards data drifting (M27)
 * [x] Setup collection of input-output data from your deployed application (M27)
-* [x] Deploy to the cloud a drift detection API (M27)
+* [ ] Deploy to the cloud a drift detection API (M27)
 * [x] Instrument your API with a couple of system metrics (M28)
 * [x] Setup cloud monitoring of your instrumented application (M28)
-* [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
+* [x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
 * [x] If applicable, optimize the performance of your data loading using distributed data loading (M29)
 * [ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)
 * [ ] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)
@@ -484,7 +484,7 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 >
 > Answer:
 
---- question 27 fill here ---
+In total we used 34$ as a group and most of it was spent on the cloud runs and deployment. Compute engine spent a lot of credits as it was running for a long time by accident (used in the exercises and left on). It was a very complex system and it was very confusing working with permissions and navigating through different products of the cloud. After some time it got easier as we got used to working with it.
 
 ### Question 28
 
@@ -500,7 +500,8 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 >
 > Answer:
 
---- question 28 fill here ---
+We implemeted a frontend because it made it easier to navigate the inference of the model and allowed a preview of the data.
+
 
 ### Question 29
 
@@ -531,6 +532,9 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 >
 > Answer:
 
+There was a lot of issues with the GPC functionality, due to the lack of logging and high complexity of some tasks. There were issues with the merges as many overlapped and it happened that multple times we had to solve many conflicts which would sometimes break the code. Wandb also created some issues when using the artifacts to load the model checkpoint and generally as not everyone could access and gain the permissions to the data there. Permissions were generally a big issue also in GCP since some team members couldnt be granted access to the bucket needed. 
+
+When images are built on the cloud or using the docker image, it takes a lot of memmory and time so it was very hard to debug the issues and keep focus on such tasks.
 --- question 30 fill here ---
 
 ### Question 31
@@ -549,4 +553,6 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
---- question 31 fill here ---
+Student s252552 has focused mostly on oranizational stuff and docker images and the report. He also created and took care of the repository structure. Student s254629 created the CLI, helped with the dv and created the monitoring. Student s253470 oversaw most of the GCP cloud operations and created the hydra configurations. He also created the dataloader for the initial machine learning model. Student s253819 oversaw the api processes and created the machine learning model training and evaluation scripts, connected initially with wandb and created the version control setups. He also focused on the drif detection algorithms.
+
+We all used generative AI in the shapes of codex and or ChatGPT/Gemini. It was mostly used for improving the code readibility and if someone was stuck at a task.
