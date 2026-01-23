@@ -1,0 +1,50 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: pneumonia-classifier-service
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        # This is where the dependencies live.
+        # Format: '{"dependent-container": ["container-it-waits-for"]}'
+        run.googleapis.com/container-dependencies: '{"otel-collector": ["pneumonia-api"]}'
+    spec:
+      containers:
+        # --- CONTAINER 1: THE API (Ingress) ---
+        - image: gcr.io/pneuomonia-classifier/pneumonia-api:latest
+          name: pneumonia-api
+          ports:
+            - containerPort: 8000
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 10
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+
+        # --- CONTAINER 2: THE SIDE CAR (Collector) ---
+        - image: otel/opentelemetry-collector-contrib
+          name: otel-collector
+          args: ["--config=/etc/otelcol/config.yaml"]
+          # No annotations here!
+          volumeMounts:
+            - name: otel-config-volume
+              mountPath: /etc/otelcol
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
+      volumes:
+        - name: otel-config-volume
+          secret:
+            secretName: otel-config

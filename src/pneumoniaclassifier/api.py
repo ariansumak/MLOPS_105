@@ -3,15 +3,20 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
+import time
 import typer
-
 import torch
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from omegaconf import DictConfig
 from pydantic import BaseModel
 from PIL import Image
 from torchvision import transforms
+
+from prometheus_client import Counter, Histogram, make_asgi_app, generate_latest, CONTENT_TYPE_LATEST
+
+
+from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
 
 from pneumoniaclassifier.inference import (
     build_transform,
@@ -87,6 +92,24 @@ def _load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
 
     return load_model(cfg, device)
 
+PREDICTION_COUNTER = Counter(
+    "pneumonia_predictions_total", 
+    "Total number of predictions", 
+    ["label"]
+)
+
+# Track how long the inference takes
+INFERENCE_LATENCY = Histogram(
+    "pneumonia_inference_duration_seconds", 
+    "Time spent performing model inference"
+)
+
+# Track errors (e.g., invalid images)
+ERROR_COUNTER = Counter(
+    "pneumonia_prediction_errors_total", 
+    "Total number of prediction errors",
+    ["error_type"]
+)
 
 def create_app() -> FastAPI:
     """Create the FastAPI application."""
@@ -99,6 +122,15 @@ def create_app() -> FastAPI:
     class_names = list(cfg.inference.class_names)
 
     app = FastAPI(title="Pneumonia Classifier API", version="0.1.0")
+
+    @app.get("/metrics")
+    def metrics():
+        """Expose Prometheus metrics."""
+        return Response(
+            generate_latest(), 
+            media_type=CONTENT_TYPE_LATEST
+        )
+
     cors_origins = _get_cors_origins()
     if cors_origins:
         app.add_middleware(
@@ -151,7 +183,18 @@ def create_app() -> FastAPI:
         try:
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         except OSError as exc:
+            ERROR_COUNTER.labels(error_type="image_decode_error").inc()
             raise HTTPException(status_code=400, detail="Invalid image file.") from exc
+        
+        tensor = app.state.transform(image).unsqueeze(0).to(app.state.device)
+
+        start_time = time.time()
+
+        with torch.inference_mode():
+            logits = app.state.model(tensor)
+            probs = torch.softmax(logits, dim=1).squeeze(0)
+
+        INFERENCE_LATENCY.observe(time.time() - start_time)
 
         label, confidence, probabilities = predict_image(
             image=image,
@@ -161,6 +204,7 @@ def create_app() -> FastAPI:
             class_names=app.state.class_names,
         )
 
+        PREDICTION_COUNTER.labels(label=label).inc()
         background_tasks.add_task(
             log_prediction,
             content=image_bytes,
