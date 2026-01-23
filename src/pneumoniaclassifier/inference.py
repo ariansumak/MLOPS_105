@@ -7,6 +7,9 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from PIL import Image
 from torchvision import transforms
+import wandb
+from pathlib import Path
+
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
 
@@ -66,8 +69,7 @@ def load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
     )
     return load_model_from_checkpoint(model, checkpoint_path, device)
 
-import wandb
-from pathlib import Path
+
 
 def load_model_from_wandb(
     cfg: DictConfig,
