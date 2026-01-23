@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from pneumoniaclassifier.data import get_dataloaders
-from pneumoniaclassifier.model import _build_model
+from pneumoniaclassifier.modeling import build_model
 import typer
 
 app = typer.Typer()
@@ -22,7 +22,7 @@ def evaluate_cli(
     _, _, test_loader = get_dataloaders(data_dir, batch_size=batch_size)
     
     # Load model (Example: assuming a generic build)
-    model = _build_model("efficientnet_b0", num_classes=2, pretrained=False)
+    model = build_model("efficientnet_b0", num_classes=2, pretrained=False)
     model.load_state_dict(torch.load(model_checkpoint, map_location=device))
     model.to(device)
     

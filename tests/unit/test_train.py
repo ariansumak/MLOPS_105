@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pneumoniaclassifier.model import _build_model
+from pneumoniaclassifier.modeling import build_model
 from pneumoniaclassifier.train import train_epoch
 
 
@@ -19,7 +19,7 @@ def dummy_data():
 @pytest.fixture
 def real_model():
     """Use the actual model from model.py."""
-    return _build_model(
+    return build_model(
         model_name="efficientnet_b0",
         num_classes=2,
         pretrained=False,  # Don't load weights for speed
