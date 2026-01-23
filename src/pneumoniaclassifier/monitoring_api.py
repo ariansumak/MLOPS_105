@@ -23,10 +23,10 @@ except ImportError as exc:
 from pneumoniaclassifier.data_drift import _build_dataset
 
 
-def _get_bucket_name() -> str | None:
-    """Return the configured GCS bucket name."""
+def _get_gcs_bucket() -> str | None:
+    """Return the configured GCS bucket name for prediction logs."""
 
-    return os.getenv("  ")
+    return os.getenv("PNEUMONIA_GCS_BUCKET")
 
 
 def _get_prefix() -> str:
@@ -82,6 +82,13 @@ def _get_image_size() -> int:
     """Return the image size used for feature extraction."""
 
     return int(os.getenv("PNEUMONIA_IMAGE_SIZE", "224"))
+
+
+def _get_log_dir() -> Path | None:
+    """Return the local prediction log directory, if configured."""
+
+    log_dir = os.getenv("PNEUMONIA_LOG_DIR")
+    return Path(log_dir) if log_dir else None
 
 
 def _load_gcs_logs(bucket_name: str, prefix: str, limit: int) -> list[dict[str, Any]]:
@@ -176,11 +183,13 @@ def _build_current_dataset() -> pd.DataFrame:
     """Build the current dataset from prediction logs."""
 
     limit = _get_current_limit()
-    bucket_name = _get_bucket_name()
+    bucket_name = _get_gcs_bucket()
     if bucket_name:
         records = _load_gcs_logs(bucket_name, _get_prefix(), limit)
     else:
-        log_dir = Path(os.getenv("PNEUMONIA_LOG_DIR", "reports/prediction_logs"))
+        log_dir = _get_log_dir()
+        if log_dir is None:
+            raise ValueError("Set PNEUMONIA_LOG_DIR for local logs or PNEUMONIA_GCS_BUCKET for GCS logs.")
         records = _load_local_logs(log_dir, limit)
     return _logs_to_dataframe(records)
 

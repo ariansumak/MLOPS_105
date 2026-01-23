@@ -1,0 +1,1449 @@
+{
+  "metrics": [
+    {
+      "metric": "DatasetDriftMetric",
+      "result": {
+        "drift_share": 0.5,
+        "number_of_columns": 10,
+        "number_of_drifted_columns": 8,
+        "share_of_drifted_columns": 0.8,
+        "dataset_drift": true
+      }
+    },
+    {
+      "metric": "DataDriftTable",
+      "result": {
+        "number_of_columns": 10,
+        "number_of_drifted_columns": 8,
+        "share_of_drifted_columns": 0.8,
+        "dataset_drift": true,
+        "drift_by_columns": {
+          "brightness": {
+            "column_name": "brightness",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.04503006341063662,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  0.01640474796295166,
+                  0.11640474796295167,
+                  0.21640474796295167,
+                  0.3164047479629517,
+                  0.4164047479629517,
+                  0.5164047479629517,
+                  0.6164047479629517,
+                  0.7164047479629517,
+                  0.8164047479629517,
+                  0.9164047479629517,
+                  1.0164047479629517
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.29092442989349365,
+                  0.32871622443199155,
+                  0.3665080189704895,
+                  0.4042998135089874,
+                  0.4420916080474854,
+                  0.4798834025859833,
+                  0.5176751971244812,
+                  0.5554669916629791,
+                  0.5932587862014771,
+                  0.6310505807399749,
+                  0.6688423752784729
+                ],
+                "y": [
+                  0.661519261133072,
+                  1.0584308178129138,
+                  1.8522539311726018,
+                  2.51377319230567,
+                  4.4983309757048895,
+                  6.350584906877492,
+                  4.895242532384733,
+                  2.381469340079052,
+                  1.0584308178129185,
+                  1.190734670039526
+                ]
+              }
+            }
+          },
+          "contrast": {
+            "column_name": "contrast",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.00772851345865415,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  -0.30664724111557007,
+                  -0.20664724111557006,
+                  -0.10664724111557006,
+                  -0.006647241115570024,
+                  0.09335275888442995,
+                  0.19335275888442993,
+                  0.29335275888443,
+                  0.39335275888443,
+                  0.49335275888443,
+                  0.59335275888443,
+                  0.6933527588844299
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.13413631916046143,
+                  0.1513651043176651,
+                  0.16859388947486878,
+                  0.18582267463207244,
+                  0.20305145978927613,
+                  0.2202802449464798,
+                  0.23750903010368346,
+                  0.2547378152608871,
+                  0.27196660041809084,
+                  0.28919538557529445,
+                  0.30642417073249817
+                ],
+                "y": [
+                  0.8706359655154345,
+                  4.062967839072021,
+                  5.223815793092609,
+                  9.576995620669766,
+                  13.349751471236663,
+                  8.416147666649202,
+                  7.5455117011337665,
+                  4.35317982757716,
+                  3.1923318735566037,
+                  1.4510599425257198
+                ]
+              }
+            }
+          },
+          "entropy": {
+            "column_name": "entropy",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.18195371481858114,
+            "drift_detected": false,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  -6.786365358677415,
+                  -6.686365358677415,
+                  -6.586365358677415,
+                  -6.486365358677415,
+                  -6.3863653586774145,
+                  -6.286365358677415,
+                  -6.186365358677415,
+                  -6.086365358677415,
+                  -5.986365358677415,
+                  -5.8863653586774145,
+                  -5.786365358677415
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  10.000000000000036,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  -18.213549193397327,
+                  -16.67167938478968,
+                  -15.129809576182032,
+                  -13.587939767574385,
+                  -12.046069958966736,
+                  -10.50420015035909,
+                  -8.962330341751443,
+                  -7.420460533143794,
+                  -5.8785907245361475,
+                  -4.336720915928501,
+                  -2.794851107320852
+                ],
+                "y": [
+                  0.0032428159446971374,
+                  0.0032428159446971335,
+                  0.0032428159446971374,
+                  0.0,
+                  0.035670975391668504,
+                  0.03891379133636565,
+                  0.0680991348386398,
+                  0.23348274801819385,
+                  0.20105458857122252,
+                  0.06161350294924554
+                ]
+              }
+            }
+          },
+          "mean_b": {
+            "column_name": "mean_b",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.04503006341063662,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  0.01632094383239746,
+                  0.11632094383239747,
+                  0.21632094383239747,
+                  0.3163209438323975,
+                  0.4163209438323975,
+                  0.5163209438323975,
+                  0.6163209438323975,
+                  0.7163209438323975,
+                  0.8163209438323975,
+                  0.9163209438323975,
+                  1.0163209438323975
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.2909269630908966,
+                  0.3287156671285629,
+                  0.36650437116622925,
+                  0.40429307520389557,
+                  0.4420817792415619,
+                  0.4798704832792282,
+                  0.5176591873168945,
+                  0.5554478913545609,
+                  0.5932365953922272,
+                  0.6310252994298935,
+                  0.6688140034675598
+                ],
+                "y": [
+                  0.6615733626398239,
+                  1.0585173802237184,
+                  1.852405415391507,
+                  2.513978778031331,
+                  4.498698865950803,
+                  6.351104281342311,
+                  4.895642883534697,
+                  2.3816641055033663,
+                  1.0585173802237184,
+                  1.1908320527516831
+                ]
+              }
+            }
+          },
+          "mean_g": {
+            "column_name": "mean_g",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.04503006341063662,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  0.01632094383239746,
+                  0.11632094383239747,
+                  0.21632094383239747,
+                  0.3163209438323975,
+                  0.4163209438323975,
+                  0.5163209438323975,
+                  0.6163209438323975,
+                  0.7163209438323975,
+                  0.8163209438323975,
+                  0.9163209438323975,
+                  1.0163209438323975
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.2909269630908966,
+                  0.3287156671285629,
+                  0.36650437116622925,
+                  0.40429307520389557,
+                  0.4420817792415619,
+                  0.4798704832792282,
+                  0.5176591873168945,
+                  0.5554478913545609,
+                  0.5932365953922272,
+                  0.6310252994298935,
+                  0.6688140034675598
+                ],
+                "y": [
+                  0.6615733626398239,
+                  1.0585173802237184,
+                  1.852405415391507,
+                  2.513978778031331,
+                  4.498698865950803,
+                  6.351104281342311,
+                  4.895642883534697,
+                  2.3816641055033663,
+                  1.0585173802237184,
+                  1.1908320527516831
+                ]
+              }
+            }
+          },
+          "mean_r": {
+            "column_name": "mean_r",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.04503006341063662,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  0.01632094383239746,
+                  0.11632094383239747,
+                  0.21632094383239747,
+                  0.3163209438323975,
+                  0.4163209438323975,
+                  0.5163209438323975,
+                  0.6163209438323975,
+                  0.7163209438323975,
+                  0.8163209438323975,
+                  0.9163209438323975,
+                  1.0163209438323975
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.2909269630908966,
+                  0.3287156671285629,
+                  0.36650437116622925,
+                  0.40429307520389557,
+                  0.4420817792415619,
+                  0.4798704832792282,
+                  0.5176591873168945,
+                  0.5554478913545609,
+                  0.5932365953922272,
+                  0.6310252994298935,
+                  0.6688140034675598
+                ],
+                "y": [
+                  0.6615733626398239,
+                  1.0585173802237184,
+                  1.852405415391507,
+                  2.513978778031331,
+                  4.498698865950803,
+                  6.351104281342311,
+                  4.895642883534697,
+                  2.3816641055033663,
+                  1.0585173802237184,
+                  1.1908320527516831
+                ]
+              }
+            }
+          },
+          "std_b": {
+            "column_name": "std_b",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.00772851345865415,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  -0.30664609372615814,
+                  -0.20664609372615814,
+                  -0.10664609372615813,
+                  -0.006646093726158098,
+                  0.09335390627384188,
+                  0.19335390627384186,
+                  0.29335390627384195,
+                  0.3933539062738419,
+                  0.4933539062738419,
+                  0.5933539062738419,
+                  0.6933539062738419
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.13413701951503754,
+                  0.15136566907167434,
+                  0.16859431862831115,
+                  0.18582296818494798,
+                  0.20305161774158478,
+                  0.2202802672982216,
+                  0.23750891685485842,
+                  0.25473756641149525,
+                  0.27196621596813203,
+                  0.2891948655247688,
+                  0.30642351508140564
+                ],
+                "y": [
+                  0.8706428179811525,
+                  4.0629998172453785,
+                  5.223856907886906,
+                  9.577070997792676,
+                  13.34985654237767,
+                  8.416213907151127,
+                  7.545571089169975,
+                  4.353214089905769,
+                  3.1923569992642307,
+                  1.4510713633019185
+                ]
+              }
+            }
+          },
+          "std_g": {
+            "column_name": "std_g",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.00772851345865415,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  -0.30664609372615814,
+                  -0.20664609372615814,
+                  -0.10664609372615813,
+                  -0.006646093726158098,
+                  0.09335390627384188,
+                  0.19335390627384186,
+                  0.29335390627384195,
+                  0.3933539062738419,
+                  0.4933539062738419,
+                  0.5933539062738419,
+                  0.6933539062738419
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.13413701951503754,
+                  0.15136566907167434,
+                  0.16859431862831115,
+                  0.18582296818494798,
+                  0.20305161774158478,
+                  0.2202802672982216,
+                  0.23750891685485842,
+                  0.25473756641149525,
+                  0.27196621596813203,
+                  0.2891948655247688,
+                  0.30642351508140564
+                ],
+                "y": [
+                  0.8706428179811525,
+                  4.0629998172453785,
+                  5.223856907886906,
+                  9.577070997792676,
+                  13.34985654237767,
+                  8.416213907151127,
+                  7.545571089169975,
+                  4.353214089905769,
+                  3.1923569992642307,
+                  1.4510713633019185
+                ]
+              }
+            }
+          },
+          "std_r": {
+            "column_name": "std_r",
+            "column_type": "num",
+            "stattest_name": "K-S p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 0.00772851345865415,
+            "drift_detected": true,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  -0.30664609372615814,
+                  -0.20664609372615814,
+                  -0.10664609372615813,
+                  -0.006646093726158098,
+                  0.09335390627384188,
+                  0.19335390627384186,
+                  0.29335390627384195,
+                  0.3933539062738419,
+                  0.4933539062738419,
+                  0.5933539062738419,
+                  0.6933539062738419
+                ],
+                "y": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  9.999999999999991,
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  0.13413701951503754,
+                  0.15136566907167434,
+                  0.16859431862831115,
+                  0.18582296818494798,
+                  0.20305161774158478,
+                  0.2202802672982216,
+                  0.23750891685485842,
+                  0.25473756641149525,
+                  0.27196621596813203,
+                  0.2891948655247688,
+                  0.30642351508140564
+                ],
+                "y": [
+                  0.8706428179811525,
+                  4.0629998172453785,
+                  5.223856907886906,
+                  9.577070997792676,
+                  13.34985654237767,
+                  8.416213907151127,
+                  7.545571089169975,
+                  4.353214089905769,
+                  3.1923569992642307,
+                  1.4510713633019185
+                ]
+              }
+            }
+          },
+          "label": {
+            "column_name": "label",
+            "column_type": "cat",
+            "stattest_name": "Z-test p_value",
+            "stattest_threshold": 0.05,
+            "drift_score": 1.0,
+            "drift_detected": false,
+            "current": {
+              "small_distribution": {
+                "x": [
+                  "PNEUMONIA"
+                ],
+                "y": [
+                  4
+                ]
+              }
+            },
+            "reference": {
+              "small_distribution": {
+                "x": [
+                  "PNEUMONIA"
+                ],
+                "y": [
+                  200
+                ]
+              }
+            }
+          }
+        },
+        "current_fi": null,
+        "reference_fi": null
+      }
+    },
+    {
+      "metric": "DatasetSummaryMetric",
+      "result": {
+        "almost_duplicated_threshold": 0.95,
+        "current": {
+          "target": null,
+          "prediction": null,
+          "date_column": null,
+          "id_column": null,
+          "number_of_columns": 13,
+          "number_of_rows": 4,
+          "number_of_missing_values": 0,
+          "number_of_categorical_columns": 1,
+          "number_of_numeric_columns": 12,
+          "number_of_text_columns": 0,
+          "number_of_datetime_columns": 0,
+          "number_of_constant_columns": 13,
+          "number_of_almost_constant_columns": 13,
+          "number_of_duplicated_columns": 7,
+          "number_of_almost_duplicated_columns": 7,
+          "number_of_empty_rows": 0,
+          "number_of_empty_columns": 0,
+          "number_of_duplicated_rows": 3,
+          "nans_by_columns": {
+            "label": 0,
+            "confidence": 0,
+            "prob_NORMAL": 0,
+            "prob_PNEUMONIA": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "number_uniques_by_columns": {
+            "label": 1,
+            "confidence": 1,
+            "prob_NORMAL": 1,
+            "prob_PNEUMONIA": 1,
+            "mean_r": 1,
+            "mean_g": 1,
+            "mean_b": 1,
+            "std_r": 1,
+            "std_g": 1,
+            "std_b": 1,
+            "brightness": 1,
+            "contrast": 1,
+            "entropy": 1
+          }
+        },
+        "reference": {
+          "target": null,
+          "prediction": null,
+          "date_column": null,
+          "id_column": null,
+          "number_of_columns": 10,
+          "number_of_rows": 200,
+          "number_of_missing_values": 0,
+          "number_of_categorical_columns": 1,
+          "number_of_numeric_columns": 9,
+          "number_of_text_columns": 0,
+          "number_of_datetime_columns": 0,
+          "number_of_constant_columns": 1,
+          "number_of_almost_constant_columns": 1,
+          "number_of_duplicated_columns": 6,
+          "number_of_almost_duplicated_columns": 6,
+          "number_of_empty_rows": 0,
+          "number_of_empty_columns": 0,
+          "number_of_duplicated_rows": 0,
+          "nans_by_columns": {
+            "label": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "number_uniques_by_columns": {
+            "label": 1,
+            "mean_r": 200,
+            "mean_g": 200,
+            "mean_b": 200,
+            "std_r": 200,
+            "std_g": 200,
+            "std_b": 200,
+            "brightness": 200,
+            "contrast": 200,
+            "entropy": 200
+          }
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "std_g",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.22,
+          "std": 0.04,
+          "min": 0.13,
+          "p25": 0.19,
+          "p50": 0.21,
+          "p75": 0.24,
+          "max": 0.31,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.24404,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.19,
+          "std": 0.0,
+          "min": 0.19,
+          "p25": 0.19,
+          "p50": 0.19,
+          "p75": 0.19,
+          "max": 0.19,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.19335,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "contrast",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.22,
+          "std": 0.04,
+          "min": 0.13,
+          "p25": 0.19,
+          "p50": 0.21,
+          "p75": 0.24,
+          "max": 0.31,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.24404,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.19,
+          "std": 0.0,
+          "min": 0.19,
+          "p25": 0.19,
+          "p50": 0.19,
+          "p75": 0.19,
+          "max": 0.19,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.19335,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "mean_b",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.49,
+          "std": 0.08,
+          "min": 0.29,
+          "p25": 0.45,
+          "p50": 0.5,
+          "p75": 0.54,
+          "max": 0.67,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.5029,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.52,
+          "std": 0.0,
+          "min": 0.52,
+          "p25": 0.52,
+          "p50": 0.52,
+          "p75": 0.52,
+          "max": 0.52,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.51632,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "mean_r",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.49,
+          "std": 0.08,
+          "min": 0.29,
+          "p25": 0.45,
+          "p50": 0.5,
+          "p75": 0.54,
+          "max": 0.67,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.5029,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.52,
+          "std": 0.0,
+          "min": 0.52,
+          "p25": 0.52,
+          "p50": 0.52,
+          "p75": 0.52,
+          "max": 0.52,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.51632,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "brightness",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.49,
+          "std": 0.08,
+          "min": 0.29,
+          "p25": 0.45,
+          "p50": 0.5,
+          "p75": 0.54,
+          "max": 0.67,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.5029,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.52,
+          "std": 0.0,
+          "min": 0.52,
+          "p25": 0.52,
+          "p50": 0.52,
+          "p75": 0.52,
+          "max": 0.52,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.5164,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "std_b",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.22,
+          "std": 0.04,
+          "min": 0.13,
+          "p25": 0.19,
+          "p50": 0.21,
+          "p75": 0.24,
+          "max": 0.31,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.24404,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.19,
+          "std": 0.0,
+          "min": 0.19,
+          "p25": 0.19,
+          "p50": 0.19,
+          "p75": 0.19,
+          "max": 0.19,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.19335,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "entropy",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": -6.63,
+          "std": 2.27,
+          "min": -18.21,
+          "p25": -7.26,
+          "p50": -6.25,
+          "p75": -5.25,
+          "max": -2.79,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": -6.59014,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": -6.29,
+          "std": 0.0,
+          "min": -6.29,
+          "p25": -6.29,
+          "p50": -6.29,
+          "p75": -6.29,
+          "max": -6.29,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": -6.28637,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "std_r",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.22,
+          "std": 0.04,
+          "min": 0.13,
+          "p25": 0.19,
+          "p50": 0.21,
+          "p75": 0.24,
+          "max": 0.31,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.24404,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.19,
+          "std": 0.0,
+          "min": 0.19,
+          "p25": 0.19,
+          "p50": 0.19,
+          "p75": 0.19,
+          "max": 0.19,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.19335,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "mean_g",
+        "column_type": "num",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.49,
+          "std": 0.08,
+          "min": 0.29,
+          "p25": 0.45,
+          "p50": 0.5,
+          "p75": 0.54,
+          "max": 0.67,
+          "unique": 200,
+          "unique_percentage": 100.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.5029,
+          "most_common_percentage": 0.5
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "mean": 0.52,
+          "std": 0.0,
+          "min": 0.52,
+          "p25": 0.52,
+          "p50": 0.52,
+          "p75": 0.52,
+          "max": 0.52,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "infinite_count": 0,
+          "infinite_percentage": 0.0,
+          "most_common": 0.51632,
+          "most_common_percentage": 100.0
+        }
+      }
+    },
+    {
+      "metric": "ColumnSummaryMetric",
+      "result": {
+        "column_name": "label",
+        "column_type": "cat",
+        "reference_characteristics": {
+          "number_of_rows": 200,
+          "count": 200,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "unique": 1,
+          "unique_percentage": 0.5,
+          "most_common": "PNEUMONIA",
+          "most_common_percentage": 100.0,
+          "new_in_current_values_count": null,
+          "unused_in_current_values_count": null
+        },
+        "current_characteristics": {
+          "number_of_rows": 4,
+          "count": 4,
+          "missing": 0,
+          "missing_percentage": 0.0,
+          "unique": 1,
+          "unique_percentage": 25.0,
+          "most_common": "PNEUMONIA",
+          "most_common_percentage": 100.0,
+          "new_in_current_values_count": 0,
+          "unused_in_current_values_count": 0
+        }
+      }
+    },
+    {
+      "metric": "DatasetMissingValuesMetric",
+      "result": {
+        "current": {
+          "different_missing_values": {
+            "": 0,
+            "-Infinity": 0,
+            "null": 0,
+            "Infinity": 0
+          },
+          "number_of_different_missing_values": 0,
+          "different_missing_values_by_column": {
+            "label": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "confidence": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "prob_NORMAL": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "prob_PNEUMONIA": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_r": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_g": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_b": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_r": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_g": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_b": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "brightness": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "contrast": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "entropy": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            }
+          },
+          "number_of_different_missing_values_by_column": {
+            "label": 0,
+            "confidence": 0,
+            "prob_NORMAL": 0,
+            "prob_PNEUMONIA": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "number_of_missing_values": 0,
+          "share_of_missing_values": 0.0,
+          "number_of_missing_values_by_column": {
+            "label": 0,
+            "confidence": 0,
+            "prob_NORMAL": 0,
+            "prob_PNEUMONIA": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "share_of_missing_values_by_column": {
+            "label": 0.0,
+            "confidence": 0.0,
+            "prob_NORMAL": 0.0,
+            "prob_PNEUMONIA": 0.0,
+            "mean_r": 0.0,
+            "mean_g": 0.0,
+            "mean_b": 0.0,
+            "std_r": 0.0,
+            "std_g": 0.0,
+            "std_b": 0.0,
+            "brightness": 0.0,
+            "contrast": 0.0,
+            "entropy": 0.0
+          },
+          "number_of_rows": 4,
+          "number_of_rows_with_missing_values": 0,
+          "share_of_rows_with_missing_values": 0.0,
+          "number_of_columns": 13,
+          "columns_with_missing_values": [],
+          "number_of_columns_with_missing_values": 0,
+          "share_of_columns_with_missing_values": 0.0
+        },
+        "reference": {
+          "different_missing_values": {
+            "": 0,
+            "-Infinity": 0,
+            "null": 0,
+            "Infinity": 0
+          },
+          "number_of_different_missing_values": 0,
+          "different_missing_values_by_column": {
+            "label": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_r": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_g": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "mean_b": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_r": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_g": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "std_b": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "brightness": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "contrast": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            },
+            "entropy": {
+              "": 0,
+              "-Infinity": 0,
+              "null": 0,
+              "Infinity": 0
+            }
+          },
+          "number_of_different_missing_values_by_column": {
+            "label": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "number_of_missing_values": 0,
+          "share_of_missing_values": 0.0,
+          "number_of_missing_values_by_column": {
+            "label": 0,
+            "mean_r": 0,
+            "mean_g": 0,
+            "mean_b": 0,
+            "std_r": 0,
+            "std_g": 0,
+            "std_b": 0,
+            "brightness": 0,
+            "contrast": 0,
+            "entropy": 0
+          },
+          "share_of_missing_values_by_column": {
+            "label": 0.0,
+            "mean_r": 0.0,
+            "mean_g": 0.0,
+            "mean_b": 0.0,
+            "std_r": 0.0,
+            "std_g": 0.0,
+            "std_b": 0.0,
+            "brightness": 0.0,
+            "contrast": 0.0,
+            "entropy": 0.0
+          },
+          "number_of_rows": 200,
+          "number_of_rows_with_missing_values": 0,
+          "share_of_rows_with_missing_values": 0.0,
+          "number_of_columns": 10,
+          "columns_with_missing_values": [],
+          "number_of_columns_with_missing_values": 0,
+          "share_of_columns_with_missing_values": 0.0
+        }
+      }
+    }
+  ]
+}

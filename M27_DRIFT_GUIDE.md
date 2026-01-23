@@ -89,3 +89,38 @@ For M27 you can include:
 - A screenshot of `drift_report.html` showing the drift summary.
 - The output of `drift_summary` as a short text snippet.
 - A sentence on how you interpret the drift share and what action you would take.
+
+## 9) Drift monitoring API (local + GCP)
+
+The drift API lives in `pneumoniaclassifier.monitoring_api` and exposes `/drift`.
+
+### Environment variables
+
+- `PNEUMONIA_LOG_DIR`: Local folder where prediction logs are stored (same value used by the inference API).
+- `PNEUMONIA_GCS_BUCKET`: GCS bucket name that stores prediction logs (used instead of local logs).
+- `PNEUMONIA_GCS_PREFIX`: GCS prefix for prediction log objects (default: `predictions/`).
+- `PNEUMONIA_CURRENT_MAX_LOGS`: Max number of latest log files to load (default: `200`).
+- `PNEUMONIA_REFERENCE_DIR`: Local reference image folder with label subfolders (default: `data/chest_xray/train`).
+- `PNEUMONIA_REFERENCE_MAX_IMAGES`: Optional cap on reference images for faster runs.
+- `PNEUMONIA_REFERENCE_GCS_BUCKET`: GCS bucket that stores the reference dataset (optional).
+- `PNEUMONIA_REFERENCE_GCS_PREFIX`: GCS prefix for the reference dataset (default: empty).
+- `PNEUMONIA_REFERENCE_REFRESH`: If `true`, re-download reference data from GCS on startup (default: `false`).
+- `PNEUMONIA_REPORT_DIR`: Output folder for drift reports (default: `reports/drift_monitor`).
+- `PNEUMONIA_IMAGE_SIZE`: Image size used for feature extraction (default: `224`).
+
+### Local usage (example)
+
+```bash
+PNEUMONIA_LOG_DIR="reports/prediction_logs" \
+uv run uvicorn pneumoniaclassifier.monitoring_api:app --app-dir src --host 0.0.0.0 --port 8002
+```
+
+### GCP usage (example)
+
+```bash
+PNEUMONIA_GCS_BUCKET="your-bucket" \
+PNEUMONIA_GCS_PREFIX="predictions/" \
+PNEUMONIA_REFERENCE_GCS_BUCKET="your-bucket" \
+PNEUMONIA_REFERENCE_GCS_PREFIX="reference/" \
+uv run uvicorn pneumoniaclassifier.monitoring_api:app --app-dir src --host 0.0.0.0 --port 8002
+```
