@@ -4,11 +4,10 @@ import os
 from pathlib import Path
 
 import torch
+import wandb
 from omegaconf import DictConfig, OmegaConf
 from PIL import Image
 from torchvision import transforms
-import wandb
-from pathlib import Path
 
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
@@ -71,23 +70,15 @@ def load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
 
 
 
-def load_model_from_wandb(
-    cfg: DictConfig,
-    device: torch.device,
-) -> torch.nn.Module:
+def load_model_from_wandb(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
     """Load model checkpoint from a W&B artifact."""
 
     artifact_ref = cfg.model.artifact_path
     if artifact_ref is None:
         raise ValueError("cfg.model.artifact must be set for W&B loading")
 
-    run = wandb.init(
-        project=cfg.wandb.project,
-        entity=cfg.wandb.entity,
-        job_type="inference",
-    )
-
-    artifact = run.use_artifact(artifact_ref, type="model")
+    api = wandb.Api()
+    artifact = api.artifact(artifact_ref)
     artifact_dir = Path(artifact.download())
 
     # assume exactly one checkpoint file

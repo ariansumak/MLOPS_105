@@ -1,5 +1,5 @@
 from __future__ import annotations
-import uvicorn
+
 import io
 import os
 from pathlib import Path
@@ -11,8 +11,6 @@ from omegaconf import DictConfig
 from pydantic import BaseModel
 from PIL import Image
 from torchvision import transforms
-
-cli_app = typer.Typer()
 
 from pneumoniaclassifier.inference import (
     build_transform,
@@ -114,7 +112,8 @@ def create_app() -> FastAPI:
     app.state.transform = transform
     app.state.class_names = class_names
     app.state.model_name = cfg.model.name
-    app.state.checkpoint_path = str(cfg.model.checkpoint_path)
+    checkpoint_path = cfg.model.get("checkpoint_path")
+    app.state.checkpoint_path = str(checkpoint_path) if checkpoint_path else None
     app.state.image_size = int(cfg.inference.image_size)
 
     @app.get("/", response_model=RootResponse)
@@ -182,11 +181,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-@cli_app.command()
-def serve(host: str = "0.0.0.0", port: int = 8000):
-    """Launch the FastAPI Pneumonia Classifier server."""
-    uvicorn.run("pneumoniaclassifier.api:app", host=host, port=port, reload=True)
-
-if __name__ == "__main__":
-    cli_app()
