@@ -38,13 +38,9 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = { "" = "src" }
+package-dir = { "" = "src", "frontend_django" = "frontend_django" }
+packages = ["pneumoniaclassifier", "frontend_django"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/dtu_frontend"]
 
 [tool.ruff]
 line-length = 120
@@ -99,4 +95,4 @@ data-check = "pneumoniaclassifier.data:app"
 data-stats = "pneumoniaclassifier.data_statistics:app"
 link-model = "pneumoniaclassifier.link_model:app"
 serve-api = "pneumoniaclassifier.api:cli_app"
-frontend = "dtu_frontend.cli_frontend:app"
+frontend = "frontend_django.cli_frontend:app"

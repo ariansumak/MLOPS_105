@@ -1,18 +1,26 @@
 # src/dtu_frontend/cli.py
 import os
 import sys
+import django
+from pathlib import Path
 import typer
 
 app = typer.Typer()
 
 def _setup_django():
-    """Sets up the Django environment."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
+    """Sets up the Django environment with path injection."""
+
+    base_dir = Path(__file__).resolve().parent
+    
+    if str(base_dir) not in sys.path:
+        sys.path.insert(0, str(base_dir))
+    
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dtu_frontend.settings")
     try:
-        import django
         django.setup()
-    except ImportError as exc:
-        raise ImportError("Django is not installed.") from exc
+    except Exception as exc:
+        print(f"❌ Django setup failed: {exc}")
+        sys.exit(1)
 
 @app.command()
 def dev(port: int = 8000, host: str = "127.0.0.1"):
