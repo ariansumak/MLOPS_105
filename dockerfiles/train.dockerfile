@@ -16,7 +16,7 @@ COPY uv.lock uv.lock
 COPY README.md README.md
 COPY src/ src/
 COPY configs/ configs/
-
+COPY frontend_django/ frontend_django/
 
 # Install Python dependencies
 RUN --mount=type=cache,target=/root/.cache/uv uv sync

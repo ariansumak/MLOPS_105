@@ -15,6 +15,7 @@ COPY README.md README.md
 COPY src/ src/
 COPY configs/ configs/
 COPY uv.lock uv.lock
+COPY frontend_django/ frontend_django/
 
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --no-dev
 
