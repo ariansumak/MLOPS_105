@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from pneumoniaclassifier.modeling import build_model, _set_trainable_layers
+from pneumoniaclassifier.modeling import build_model, set_trainable_layers
 
 
 def test_build_model():
@@ -14,7 +14,7 @@ def test_build_model():
 
 def test_set_trainable_layers():
     model = build_model("efficientnet_b0", num_classes=2, pretrained=False)
-    _set_trainable_layers(model, unfreeze_blocks=0)
+    set_trainable_layers(model, unfreeze_blocks=0)
 
     # Classifier should be trainable
     assert any(p.requires_grad for p in model.classifier.parameters())

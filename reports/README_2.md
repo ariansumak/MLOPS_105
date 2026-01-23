@@ -218,7 +218,7 @@ In total, we implemented 13 tests. These primarily focus on the most critical co
 >
 > Answer:
 
---- question 8 fill here ---
+The toal code coverage of code is 41%, which includes all our source code. We are far from 100% coverage of our source code, but even if we were that wouldn't mean it's error free. Especially since we tried to make our code for deployment cloud, and a lot of the errors were coming from permissions and lack of / wrong environment variables. Most of the tests are written using dummy data and testing the functions inside file, and a few api tests using locust.
 
 ### Question 9
 
@@ -372,7 +372,7 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 17 fill here ---
+We used Buckets to store our data for the data drifting tasks and for data versioning control. Artifact Registry was used to store the built docker images. We used Cloud Build and Triggers for automatic build of docker images on every push to main branch, using workflow for Git Actions and a cloudbuild.yaml file. We used Vertex AI to run our docker image for training. Finally, Cloud Run was used for deployment of backend and data drifting services.
 
 ### Question 18
 
@@ -387,7 +387,7 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 18 fill here ---
+We never used Compute Engine directly. For training we setup a vertex_ai_train.yaml file that would configure the VMs and for deployment we used Cloud Run.
 
 ### Question 19
 
@@ -396,8 +396,9 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 19 fill here ---
-
+![Bucket overview](figures/gcp_bucket1.png)
+![Bucket 1](figures/gcp_bucket2.png)
+![Bucket 2](figures/gcp_bucket3.png)
 ### Question 20
 
 > **Upload 1-2 images of your GCP artifact registry, such that we can see the different docker images that you have**
@@ -405,7 +406,8 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 20 fill here ---
+![Artifact registry](figures/artifact_registry.png)
+![Docker registry](figures/artifact_registry2.png)
 
 ### Question 21
 
@@ -414,7 +416,7 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 21 fill here ---
+![Cloud build](figures/cloud_build.png)
 
 ### Question 22
 
@@ -429,7 +431,11 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
+<<<<<<< HEAD:reports/README_2.md
 
+=======
+We trained our model only using the Vertex AI, because we found it to be easier during the exercises. Once we had setup a docker image that would have everything necessary to run our training script, including wandb logging, all we had to do was write a yaml file for vertex_ai, which was pretty similar to the one given in exercises. We just injected our wandb api key as secret from gcp and it was set to go. It worked almost immediately, so we had no reason to tryout the Engine.
+>>>>>>> 7048caa5838a7f4af5cadfc1cd8f1b76f0e27e14:reports/README.md
 
 ## Deployment
 
