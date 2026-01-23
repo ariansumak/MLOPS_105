@@ -20,15 +20,17 @@ uv pip install -e .
 
 These are high-level shortcuts defined in `pyproject.toml`. They handle argument validation and provide `--help` menus.
 
-| Category     | Task           | Command                 | Description                                         |
-| ------------ | -------------- | ----------------------- | --------------------------------------------------- |
-| **Backend**  | **Data Check** | `uv run data-check`     | Verifies data loading and outputs sample counts.    |
-| **Backend**  | **Data Stats** | `uv run data-stats`     | Generates distribution plots in `reports/figures/`. |
-| **Backend**  | **Training**   | `uv run train`          | Starts model training (Hydra-based).                |
-| **Backend**  | **Evaluation** | `uv run evaluate`       | Evaluates a checkpoint on the test set.             |
-| **Backend**  | **API Server** | `uv run serve-api`      | Starts the FastAPI inference server.                |
-| **Frontend** | **Dev Server** | `uv run frontend dev`   | Starts the Django development server.               |
-| **Frontend** | **Full Setup** | `uv run frontend setup` | Migrates DB and starts server in one step.          |
+| Category     | Task           | Command                             | Description                                         |
+| ------------ | -------------- | ----------------------------------- | --------------------------------------------------- |
+| **Backend**  | **Data Check** | `uv run data-check data/chest_xray` | Verifies data loading and outputs sample counts.    |
+| **Backend**  | **Data Stats** | `uv run data-stats`                 | Generates distribution plots in `reports/figures/`. |
+| **Backend**  | **Training**   | `uv run train`                      | Starts model training (Hydra-based).                |
+| **Backend**  | **Evaluation** | `uv run evaluate ` \*               | Evaluates a checkpoint on the test set.             |
+| **Backend**  | **API Server** | `uv run serve-api`                  | Starts the FastAPI inference server.                |
+| **Frontend** | **Dev Server** | `uv run frontend dev`               | Starts the Django development server.               |
+| **Frontend** | **Full Setup** | `uv run frontend setup`             | Migrates DB and starts server in one step.          |
+
+- `--model-checkpoint models/MODEL.pth` (In case the default checkpoint needs to be overridden.)
 
 ### 2. Automation Tasks (`invoke`)
 
