@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
+import typer
 
 import torch
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
@@ -22,6 +23,7 @@ from pneumoniaclassifier.inference import (
 )
 from pneumoniaclassifier.prediction_logging import log_prediction
 
+cli_app = typer.Typer()
 
 class HealthResponse(BaseModel):
     """Health check response schema."""
@@ -181,3 +183,11 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+@cli_app.command()
+def serve(host: str = "0.0.0.0", port: int = 8000):
+    """Launch the FastAPI Pneumonia Classifier server."""
+    uvicorn.run("pneumoniaclassifier.api:app", host=host, port=port, reload=True)
+
+if __name__ == "__main__":
+    cli_app()
