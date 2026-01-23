@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dvc[gs]>=3.66.1",
     "django>=6.0.1",
     "fastapi>=0.116.1",
     "hydra-core>=1.3.2",
@@ -20,25 +21,27 @@ dependencies = [
     "typer>=0.21.1",
     "uvicorn>=0.35.0",
     "wandb>=0.23.1",
+    "bentoml>=1.4.33",
 ]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
     "coverage>=7.13.1",
+    "httpx>=0.28.1",
     "invoke>=2.2.1",
+    "locust>=2.38.0",
     "pytest>=9.0.2",
     "ruff>=0.14.11",
 ]
 
 [tool.setuptools]
-package-dir = { "" = "src" }
+package-dir = { "" = "src", "frontend_django" = "frontend_django" }
+packages = ["pneumoniaclassifier", "frontend_django"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.ruff]
 line-length = 120
@@ -85,3 +88,12 @@ ignore = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*/config/*"]
+
+[project.scripts]
+train = "pneumoniaclassifier.train:app"
+evaluate = "pneumoniaclassifier.evaluate:app"
+data-check = "pneumoniaclassifier.data:app"
+data-stats = "pneumoniaclassifier.data_statistics:app"
+link-model = "pneumoniaclassifier.link_model:app"
+serve-api = "pneumoniaclassifier.api:cli_app"
+frontend = "frontend_django.cli_frontend:app"

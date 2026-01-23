@@ -1,0 +1,8 @@
+service: "src.pneumoniaclassifier.bento_service:PneumoniaClassifierService"
+labels:
+  project: "pneumoniaclassifier"
+  milestone: "m25-bentoml"
+include:
+  - "src/pneumoniaclassifier/**"
+  - "configs/**"
+  - "models/**"
