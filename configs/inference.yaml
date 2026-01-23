@@ -3,6 +3,11 @@ model:
   num_classes: 2
   pretrained: false
   checkpoint_path: models/m22_model.pt
+  artifact_path: s253819-danmarks-tekniske-universitet-dtu-org/wandb-registry-pneumonia_models/models:production
+
+wandb:
+  project: pneumoniaclassifier
+  entity: s253819-danmarks-tekniske-universitet-dtu
 
 inference:
   device: auto

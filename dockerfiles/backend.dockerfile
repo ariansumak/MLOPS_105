@@ -10,25 +10,18 @@ ENV PYTHONPATH=/app/src
 ENV UV_LINK_MODE=copy
 ENV DVC_NO_SCM=1
 
-# Copy project metadata and sources
+# Copy project files
 COPY pyproject.toml pyproject.toml
-COPY uv.lock uv.lock
 COPY README.md README.md
 COPY src/ src/
 COPY configs/ configs/
-
+COPY uv.lock uv.lock
 
 # Install Python dependencies
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-RUN uv run dvc init --no-scm
-COPY .dvc/config .dvc/config
-COPY data.dvc data.dvc
-RUN uv run dvc config core.no_scm true
-
-# Pull data at runtime, not build time
-# DVC will use configuration from .dvc/config
-# GCP credentials are available via service account
-ENTRYPOINT ["sh", "-c", "uv run dvc pull && ls -l /app && ls -l /app/data/ && uv run python -m pneumoniaclassifier.train"]
+EXPOSE $PORT
 
 
+# Default: FastAPI
+CMD ["sh", "-c", "uv run uvicorn pneumoniaclassifier.api:app --host 0.0.0.0 --port ${PORT}"]

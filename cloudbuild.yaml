@@ -17,5 +17,42 @@ steps:
     'push',
     'europe-west1-docker.pkg.dev/$PROJECT_ID/docker-registry/train'
   ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build API container'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west1-docker.pkg.dev/$PROJECT_ID/docker-registry/pneumonia-api',
+    '-f',
+    'dockerfiles/backend.dockerfile'
+  ]
+  env:
+    - 'DOCKER_BUILDKIT=1'
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push API container'
+  args: [
+    'push',
+    'europe-west1-docker.pkg.dev/$PROJECT_ID/docker-registry/pneumonia-api'
+  ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'Deploy backend to Cloud Run'
+  args: [
+    'run',
+    'deploy',
+    'pneumonia-api',
+    '--image',
+    'europe-west1-docker.pkg.dev/$PROJECT_ID/docker-registry/pneumonia-api:latest',
+    '--region',
+    'europe-west1',
+    '--platform',
+    'managed',
+    '--allow-unauthenticated',
+    '--update-secrets=WANDB_API_KEY=WANDB_API_KEY:latest'
+  ]
+  
 options:
   logging: CLOUD_LOGGING_ONLY
+

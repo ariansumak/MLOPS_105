@@ -52,7 +52,9 @@ def build_transform(cfg: DictConfig) -> transforms.Compose:
 
 
 def load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
-    """Load the model for inference."""
+    """Load the model for inference."""    
+    if "artifact_path" in cfg.model:
+        return load_model_from_wandb(cfg, device)
 
     checkpoint_path = Path(cfg.model.checkpoint_path)
     if not checkpoint_path.exists():
@@ -63,6 +65,45 @@ def load_model(cfg: DictConfig, device: torch.device) -> torch.nn.Module:
         pretrained=cfg.model.pretrained,
     )
     return load_model_from_checkpoint(model, checkpoint_path, device)
+
+import wandb
+from pathlib import Path
+
+def load_model_from_wandb(
+    cfg: DictConfig,
+    device: torch.device,
+) -> torch.nn.Module:
+    """Load model checkpoint from a W&B artifact."""
+
+    artifact_ref = cfg.model.artifact_path
+    if artifact_ref is None:
+        raise ValueError("cfg.model.artifact must be set for W&B loading")
+
+    run = wandb.init(
+        project=cfg.wandb.project,
+        entity=cfg.wandb.entity,
+        job_type="inference",
+    )
+
+    artifact = run.use_artifact(artifact_ref, type="model")
+    artifact_dir = Path(artifact.download())
+
+    # assume exactly one checkpoint file
+    ckpt_files = list(artifact_dir.glob("*.pt"))
+    if not ckpt_files:
+        raise FileNotFoundError("No .pt file found in W&B artifact")
+
+    checkpoint_path = ckpt_files[0]
+
+    model = build_model(
+        model_name=cfg.model.name,
+        num_classes=cfg.model.num_classes,
+        pretrained=False,  # important!
+    )
+
+    model = load_model_from_checkpoint(model, checkpoint_path, device)
+    model.eval()
+    return model
 
 
 def predict_image(
