@@ -4,8 +4,33 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from pneumoniaclassifier.data import get_dataloaders
+from pneumoniaclassifier.model import _build_model
+import typer
 
+app = typer.Typer()
 
+@app.command()
+def evaluate_cli(
+    model_checkpoint: str = "models/model.ckpt",
+    data_dir: str = "data/chest_xray",
+    batch_size: int = 32,
+    device: str = "cpu"
+):
+    """Standalone CLI to evaluate a saved model checkpoint."""
+    device = torch.device(device)
+    _, _, test_loader = get_dataloaders(data_dir, batch_size=batch_size)
+    
+    # Load model (Example: assuming a generic build)
+    model = _build_model("efficientnet_b0", num_classes=2, pretrained=False)
+    model.load_state_dict(torch.load(model_checkpoint, map_location=device))
+    model.to(device)
+    
+    criterion = nn.CrossEntropyLoss()
+    # Call your original evaluate logic
+    loss, acc = evaluate(model, test_loader, criterion, device, show_progress=True)
+    print(f"Evaluation Results -> Loss: {loss:.4f}, Accuracy: {acc:.4f}")
+    
 def evaluate(
     model: nn.Module,
     loader: DataLoader,
@@ -39,3 +64,6 @@ def evaluate(
     avg_loss = total_loss / max(total, 1)
     accuracy = correct / max(total, 1)
     return avg_loss, accuracy
+
+if __name__ == "__main__":
+    app()

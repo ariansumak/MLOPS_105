@@ -89,7 +89,7 @@ will check the repositories and the code to verify your answers.
 * [x] Create a trigger workflow for automatically building your docker images (M21)
 * [x] Get your model training in GCP using either the Engine or Vertex AI (M21)
 * [x] Create a FastAPI application that can do inference using your model (M22)
-* [ ] Deploy your model in GCP using either Functions or Run as the backend (M23)
+* [x] Deploy your model in GCP using either Functions or Run as the backend (M23)
 * [x] Write API tests for your application and setup continues integration for these (M24)
 * [x] Load test your application (M24)
 * [x] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
@@ -98,8 +98,8 @@ will check the repositories and the code to verify your answers.
 ### Week 3
 
 * [x] Check how robust your model is towards data drifting (M27)
-* [ ] Setup collection of input-output data from your deployed application (M27)
-* [ ] Deploy to the cloud a drift detection API (M27)
+* [x] Setup collection of input-output data from your deployed application (M27)
+* [x] Deploy to the cloud a drift detection API (M27)
 * [x] Instrument your API with a couple of system metrics (M28)
 * [x] Setup cloud monitoring of your instrumented application (M28)
 * [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
@@ -120,21 +120,11 @@ will check the repositories and the code to verify your answers.
 
 ### Question 1
 > **Enter the group number you signed up on <learn.inside.dtu.dk>**
->
-> Answer:
-
 105
 
 
 ### Question 2
 > **Enter the study number for each member in the group**
->
-> Example:
->
-> 
->
-> Answer:
-
 s252552, s253819, s253470, s254629
 
 
@@ -161,16 +151,9 @@ s252552, s253819, s253470, s254629
 
 > **Explain how you managed dependencies in your project? Explain the process a new team member would have to go**
 > **through to get an exact copy of your environment.**
->
-> Recommended answer length: 100-200 words
->
-> Example:
-> *We used ... for managing our dependencies. The list of dependencies was auto-generated using ... . To get a*
-> *complete copy of our development environment, one would have to run the following commands*
->
-> Answer:
 
---- question 4 fill here ---
+We used uv package manager for managing our dependencies. The list of dependencies was auto-generated using
+To get a complete copy of our development environment, one would have to run the following commands: uv sync
 
 ### Question 5
 
