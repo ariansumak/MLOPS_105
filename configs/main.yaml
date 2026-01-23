@@ -25,3 +25,4 @@ wandb:
   run_name: null
   log_model: false
   model_name: model1
+  artifact_target_path: s253819-danmarks-tekniske-universitet-dtu/wandb-registry-pneumonia_models/models"

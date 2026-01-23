@@ -1,13 +1,12 @@
 from __future__ import annotations
-import uvicorn
+
 import io
 import os
 from pathlib import Path
 import time
-
-import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile, Response
 import typer
+import torch
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from omegaconf import DictConfig
 from pydantic import BaseModel
@@ -18,7 +17,6 @@ from prometheus_client import Counter, Histogram, make_asgi_app, generate_latest
 
 
 from pneumoniaclassifier.modeling import build_model, load_model_from_checkpoint
-cli_app = typer.Typer()
 
 from pneumoniaclassifier.inference import (
     build_transform,
@@ -28,7 +26,9 @@ from pneumoniaclassifier.inference import (
     predict_image,
     resolve_config_path,
 )
+from pneumoniaclassifier.prediction_logging import log_prediction
 
+cli_app = typer.Typer()
 
 class HealthResponse(BaseModel):
     """Health check response schema."""
@@ -145,6 +145,10 @@ def create_app() -> FastAPI:
     app.state.model = model
     app.state.transform = transform
     app.state.class_names = class_names
+    app.state.model_name = cfg.model.name
+    checkpoint_path = cfg.model.get("checkpoint_path")
+    app.state.checkpoint_path = str(checkpoint_path) if checkpoint_path else None
+    app.state.image_size = int(cfg.inference.image_size)
 
     @app.get("/", response_model=RootResponse)
     def root() -> RootResponse:
@@ -166,7 +170,10 @@ def create_app() -> FastAPI:
         return HealthResponse(status="ok")
 
     @app.post("/predict", response_model=PredictionResponse)
-    async def predict(file: UploadFile = File(...)) -> PredictionResponse:
+    async def predict(
+        background_tasks: BackgroundTasks,
+        file: UploadFile = File(...),
+    ) -> PredictionResponse:
         """Run inference on an uploaded image."""
 
         if file.content_type is None or not file.content_type.startswith("image/"):
@@ -198,6 +205,17 @@ def create_app() -> FastAPI:
         )
 
         PREDICTION_COUNTER.labels(label=label).inc()
+        background_tasks.add_task(
+            log_prediction,
+            content=image_bytes,
+            label=label,
+            confidence=confidence,
+            probabilities=probabilities,
+            filename=file.filename,
+            model_name=app.state.model_name,
+            checkpoint_path=app.state.checkpoint_path,
+            image_size=app.state.image_size,
+        )
 
         return PredictionResponse(
             label=label,

@@ -20,4 +20,4 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --no-dev
 
 EXPOSE $PORT
 
-CMD ["sh", "-c", "uv run uvicorn pneumoniaclassifier.api:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uv run uvicorn pneumoniaclassifier.monitoring_api:app --host 0.0.0.0 --port ${PORT}"]
