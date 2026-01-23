@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-01-23T11:43:47.719605+00:00",
+  "filename": "person99_bacteria_473.jpeg",
+  "content_hash": "3d65a120bdd72cf9ba02c24c11d3e59a50e00e08a4795d11004b1c6d34df9f12",
+  "label": "PNEUMONIA",
+  "confidence": 0.9135429263114929,
+  "probabilities": {
+    "NORMAL": 0.08645708113908768,
+    "PNEUMONIA": 0.9135429263114929
+  },
+  "features": {
+    "mean_r": 0.5163209438323975,
+    "mean_g": 0.5163209438323975,
+    "mean_b": 0.5163209438323975,
+    "std_r": 0.19335390627384186,
+    "std_g": 0.19335390627384186,
+    "std_b": 0.19335390627384186,
+    "brightness": 0.5164047479629517,
+    "contrast": 0.19335275888442993,
+    "entropy": -6.286365358677415
+  },
+  "model_name": "efficientnet_b0",
+  "checkpoint_path": "models/m22_model.pt"
+}

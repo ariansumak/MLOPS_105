@@ -5,8 +5,7 @@ import os
 from pathlib import Path
 
 import torch
-import typer
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from omegaconf import DictConfig
 from pydantic import BaseModel
@@ -23,6 +22,7 @@ from pneumoniaclassifier.inference import (
     predict_image,
     resolve_config_path,
 )
+from pneumoniaclassifier.prediction_logging import log_prediction
 
 
 class HealthResponse(BaseModel):
@@ -113,6 +113,9 @@ def create_app() -> FastAPI:
     app.state.model = model
     app.state.transform = transform
     app.state.class_names = class_names
+    app.state.model_name = cfg.model.name
+    app.state.checkpoint_path = str(cfg.model.checkpoint_path)
+    app.state.image_size = int(cfg.inference.image_size)
 
     @app.get("/", response_model=RootResponse)
     def root() -> RootResponse:
@@ -134,7 +137,10 @@ def create_app() -> FastAPI:
         return HealthResponse(status="ok")
 
     @app.post("/predict", response_model=PredictionResponse)
-    async def predict(file: UploadFile = File(...)) -> PredictionResponse:
+    async def predict(
+        background_tasks: BackgroundTasks,
+        file: UploadFile = File(...),
+    ) -> PredictionResponse:
         """Run inference on an uploaded image."""
 
         if file.content_type is None or not file.content_type.startswith("image/"):
@@ -152,6 +158,18 @@ def create_app() -> FastAPI:
             transform=app.state.transform,
             device=app.state.device,
             class_names=app.state.class_names,
+        )
+
+        background_tasks.add_task(
+            log_prediction,
+            content=image_bytes,
+            label=label,
+            confidence=confidence,
+            probabilities=probabilities,
+            filename=file.filename,
+            model_name=app.state.model_name,
+            checkpoint_path=app.state.checkpoint_path,
+            image_size=app.state.image_size,
         )
 
         return PredictionResponse(
