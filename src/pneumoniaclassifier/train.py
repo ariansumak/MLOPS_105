@@ -12,10 +12,12 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+import typer
 import wandb
 from pneumoniaclassifier.evaluate import evaluate
 from pneumoniaclassifier.modeling import build_model, set_trainable_layers
 
+app = typer.Typer()
 
 @dataclass
 class DataConfig:
@@ -237,6 +239,10 @@ def train_epoch(
     accuracy = correct / max(total, 1)
     return avg_loss, accuracy, global_step
 
+@app.command()
+def train_wrapper():
+    """CLI entry point that triggers the Hydra training configuration."""
+    train()
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="main")
 def train(cfg: DictConfig) -> None:
@@ -307,4 +313,4 @@ def train(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    train()
+    app()

@@ -2,9 +2,11 @@ import typer
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+app = typer.Typer()
+
 DATA_DIR = "data/chest_xray"
 
-
+@app.command()
 def get_dataloaders(
     data_dir: str, batch_size: int = 32, num_workers: int = 4, augment: bool = True
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
@@ -50,6 +52,7 @@ def get_dataloaders(
     )
 
     train_dataset = datasets.ImageFolder(f"{data_dir}/train", transform=train_transform)
+    print(f"Loaded {len(train_dataset)} training images.")
     val_dataset = datasets.ImageFolder(f"{data_dir}/val", transform=test_transform)
     test_dataset = datasets.ImageFolder(f"{data_dir}/test", transform=test_transform)
 
@@ -61,4 +64,4 @@ def get_dataloaders(
 
 
 if __name__ == "__main__":
-    typer.run(get_dataloaders(DATA_DIR))
+    app()

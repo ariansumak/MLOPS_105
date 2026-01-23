@@ -1,7 +1,11 @@
 import os
 import typer
 import wandb
+import typer
 
+app = typer.Typer()
+
+@app.command()
 def link_model(
     artifact_path: str,
     aliases: list[str] = typer.Option(
@@ -76,4 +80,4 @@ def link_model(
 
 
 if __name__ == "__main__":
-    typer.run(link_model)
+    app()

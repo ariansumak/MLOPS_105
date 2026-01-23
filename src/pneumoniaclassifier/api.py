@@ -1,16 +1,19 @@
 from __future__ import annotations
-
+import uvicorn
 import io
 import os
 from pathlib import Path
 
 import torch
+import typer
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from omegaconf import DictConfig
 from pydantic import BaseModel
 from PIL import Image
 from torchvision import transforms
+
+cli_app = typer.Typer()
 
 from pneumoniaclassifier.inference import (
     build_transform,
@@ -161,3 +164,11 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+@cli_app.command()
+def serve(host: str = "0.0.0.0", port: int = 8000):
+    """Launch the FastAPI Pneumonia Classifier server."""
+    uvicorn.run("pneumoniaclassifier.api:app", host=host, port=port, reload=True)
+
+if __name__ == "__main__":
+    cli_app()
