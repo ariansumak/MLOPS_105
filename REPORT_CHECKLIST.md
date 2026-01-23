@@ -152,24 +152,42 @@ s252552, s253819, s253470, s254629
 > **Explain how you managed dependencies in your project? Explain the process a new team member would have to go**
 > **through to get an exact copy of your environment.**
 
-We used uv package manager for managing our dependencies. The list of dependencies was auto-generated using
-To get a complete copy of our development environment, one would have to run the following commands: uv sync
+We managed dependencies using uv, a modern Python package and environment manager that provides fast, reproducible dependency resolution and virtual environment handling.
+
+All project dependencies are declared in the pyproject.toml file, which serves as the single source of truth for both runtime and development dependencies. From this file, uv automatically generates a lockfile (uv.lock), which pins exact package versions and transitive dependencies. This ensures that all team members use an identical dependency graph across machines.
+
+To obtain an exact copy of the development environment, a new team member would follow these steps:
+
+```bash
+git clone git@github.com:ariansumak/MLOPS_105.git
+cd MLOPS_105
+uv sync                  #synchronize the environment
+uv pip install -e .      # install the project in editable mode
+```
 
 ### Question 5
 
-> **We expect that you initialized your project using the cookiecutter template. Explain the overall structure of your**
-> **code. What did you fill out? Did you deviate from the template in some way?**
->
-> Recommended answer length: 100-200 words
->
-> Example:
-> *From the cookiecutter template we have filled out the ... , ... and ... folder. We have removed the ... folder*
-> *because we did not use any ... in our project. We have added an ... folder that contains ... for running our*
-> *experiments.*
->
-> Answer:
+> **We expect that you initialized your project using the cookiecutter template. Explain the overall structure of your **code. What did you fill out? Did you deviate from the template in some way?**
 
---- question 5 fill here ---
+The project was initialized using the provided cookiecutter MLOps template, which defines a standardized structure for machine learning projects.
+
+We filled out and actively used the following parts of the template:
+
+* **src/** - Contains the core Python package for the project, including modules for data loading, model definition, training, evaluation, inference, and the FastAPI and BentoML services. We followed the recommended src-layout to ensure clean imports and reproducibility.
+
+* **configs/** - Filled with Hydra configuration files, split by concern (data, model, optimizer, training, experiment, and inference). These configs allow us to compose experiments and override parameters from the command line without modifying source code.
+
+* **dockerfiles/** - Contains the docker files for training and for the FastAPI service that exposes health and prediction endpoints and loads model + config.
+
+* **tests/** - Implemented unit and integration tests, particularly for the API and data loading, which are run locally and in CI.
+
+* **models/** - Contains the trained models checkpoints.
+
+* **reports/** - Contains sample images of the dataset and statistics like class distribution across the different splits of the dataset and the dataset itself.
+
+We have slightly deviated from the template, having removed the following directories:
+
+* **data/** - The original data/ directory was intentionally removed from Git tracking and replaced by DVC-based data versioning. Large image datasets are not suitable for Git, so we use DVC to store the data in a remote bucket in  Google Cloud Platform while committing only the corresponding .dvc metadata files. This ensures that all team members can retrieve the exact same dataset using **dvc pull**  , without inflating the repository size.
 
 ### Question 6
 
@@ -194,16 +212,8 @@ To get a complete copy of our development environment, one would have to run the
 ### Question 7
 
 > **How many tests did you implement and what are they testing in your code?**
->
-> Recommended answer length: 50-100 words.
->
-> Example:
-> *In total we have implemented X tests. Primarily we are testing ... and ... as these the most critical parts of our*
-> *application but also ... .*
->
-> Answer:
 
---- question 7 fill here ---
+In total, we implemented 13 tests. These primarily focus on the most critical components of the system: the FastAPI inference API, data loading pipeline, model construction, and training loop. The API tests validate endpoint availability, correct predictions, and proper error handling for invalid inputs. Data tests ensure correct batching and preprocessing behavior, while model and training tests verify output shapes, parameter freezing, and successful execution of a training epoch. Together, these tests provide confidence in both training and inference workflows.
 
 ### Question 8
 
@@ -224,48 +234,41 @@ To get a complete copy of our development environment, one would have to run the
 
 > **Did you workflow include using branches and pull requests? If yes, explain how. If not, explain how branches and**
 > **pull request can help improve version control.**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *We made use of both branches and PRs in our project. In our group, each member had an branch that they worked on in*
-> *addition to the main branch. To merge code we ...*
->
-> Answer:
 
---- question 9 fill here ---
+Yes, our development workflow made use of feature branches and pull requests. Instead of committing directly to the main branch, we created separate branches for distinct pieces of functionality such as API development (api_tasks, api_workflow), configuration management (configurations, pip2hydra), data handling (feat-dvc), CLI tooling (feat-CLI), containerization (docker, docker-image), continuous integration (continous-integration), and cloud deployment (gcp-init, cloud-deployment, drift_deploy).
+
+Each branch allowed us to develop and test changes in isolation without breaking the stable main codebase. Once a feature or milestone was complete, the changes were merged back into main using pull requests. This process encouraged review of the changes, made it easier to track what was added for each milestone, and reduced the risk of introducing bugs.
+
+Overall, using branches and pull requests improved collaboration, made the project history more understandable, and provided a safer workflow for integrating new features into the main branch.
 
 ### Question 10
 
 > **Did you use DVC for managing data in your project? If yes, then how did it improve your project to have version**
 > **control of your data. If no, explain a case where it would be beneficial to have version control of your data.**
->
-> Recommended answer length: 100-200 words.
->
-> Example:
-> *We did make use of DVC in the following way: ... . In the end it helped us in ... for controlling ... part of our*
-> *pipeline*
->
-> Answer:
 
---- question 10 fill here ---
+We did make use of DVC to manage our dataset, which was hosted on Google Cloud Platform. Using DVC allowed us to track our data versions separately from the code, enabling us to reproduce experiments reliably and collaborate efficiently without having to store large files directly in Git. Each team member could pull the exact version of the dataset needed for training or evaluation using dvc pull, ensuring consistency across different environments.
+
+Version control of data also helped us maintain a clear history of dataset updates, such as cleaning or preprocessing steps, and it simplified the integration of new data without breaking existing experiments. In addition, DVC’s ability to link specific code versions to particular dataset snapshots made it easy to reproduce results for reporting and debugging. Overall, DVC improved both reproducibility and collaboration, making our project workflow more robust and reliable.
 
 ### Question 11
 
 > **Discuss you continuous integration setup. What kind of continuous integration are you running (unittesting,**
 > **linting, etc.)? Do you test multiple operating systems, Python  version etc. Do you make use of caching? Feel free**
 > **to insert a link to one of your GitHub actions workflow.**
->
-> Recommended answer length: 200-300 words.
->
-> Example:
-> *We have organized our continuous integration into 3 separate files: one for doing ..., one for running ... testing*
-> *and one for running ... . In particular for our ..., we used ... .An example of a triggered workflow can be seen*
-> *here: <weblink>*
->
-> Answer:
 
---- question 11 fill here ---
+Our project uses GitHub Actions for continuous integration (CI). 
+
+We have organized our continuous integration setup into three main workflows: Check Staged Model, DVC Workflow, and Run Tests.
+
+The Run Tests workflow is focused on verifying code correctness and cross-platform compatibility. It runs on three operating systems: Ubuntu (latest), Windows (latest), and macOS (latest). Each job performs a series of steps including setting up the environment, checking out the repository, setting up Python, installing dependencies, running tests with pytest, and then performing post-job cleanup tasks. This ensures that our code works consistently across different OS environments and Python versions. We also make use of caching for dependencies to speed up workflow execution.
+
+The DVC Workflow is designed to maintain data integrity. It currently contains a single job, run_data_checker, which validates that our dataset is consistent and correctly versioned according to DVC standards.
+
+The Check Staged Model workflow handles model deployment verification. It consists of three jobs: identify_event, test_model, and add_production_alias. This workflow ensures that any new model version passes validation before being promoted to production.
+
+Our CI setup covers unit testing, data validation, and model verification, providing confidence in both code and data reliability. By separating concerns into distinct workflows, we can maintain modularity and clarity while running targeted checks efficiently.
+
+An example of a triggered workflow can be seen here: https://github.com/ariansumak/MLOPS_105/actions/workflows/tests.yaml
 
 ## Running code and tracking experiments
 
