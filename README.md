@@ -14,6 +14,17 @@ Frontend (Django) --> FastAPI Inference --> Prediction logs (local or GCS)
                      Reference images (train set)
 ```
 
+![MLOps pipeline overview](reports/figures/framework_overview.png)
+
+## Framework map
+
+| Layer | Tools |
+| --- | --- |
+| Training / Experimentation | PyTorch, Torchvision, Hydra, OmegaConf, W&B |
+| Serving | FastAPI, Uvicorn, Django (frontend), BentoML (optional) |
+| Monitoring / Drift | Evidently |
+| MLOps / Infra | Docker, DVC (GCS), Google Cloud (Cloud Run, GCS) |
+
 Local mode:
 - Reference images live on disk (default: `data/chest_xray/train`).
 - Predictions logs are written to `reports/prediction_logs`.
@@ -144,7 +155,7 @@ docker run --rm \
   wandb.enabled=false
 ```
 
-## Project structure (current)
+## Project structure
 
 ```txt
 configs/                Configuration files

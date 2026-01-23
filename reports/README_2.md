@@ -111,9 +111,9 @@ will check the repositories and the code to verify your answers.
 
 * [ ] Write some documentation for your application (M32)
 * [ ] Publish the documentation to GitHub Pages (M32)
-* [ ] Revisit your initial project description. Did the project turn out as you wanted?
-* [ ] Create an architectural diagram over your MLOps pipeline
-* [ ] Make sure all group members have an understanding about all parts of the project
+* [x] Revisit your initial project description. Did the project turn out as you wanted?
+* [x] Create an architectural diagram over your MLOps pipeline
+* [x] Make sure all group members have an understanding about all parts of the project
 * [x] Uploaded all your code to GitHub
 
 ## Group information
@@ -277,7 +277,11 @@ An example of a triggered workflow can be seen here: https://github.com/ariansum
 >
 > Answer:
 
---- question 12 fill here ---
+We configured experiments with Hydra config files in configs/, primarily main.yaml and inference.yaml. This lets us keep defaults in YAML and override parameters from the command line for quick experiments. For example, we can run a short CPU experiment with a different learning rate and epochs:
+
+train.py train.epochs=1 train.device=cpu optimizer.lr=1e-3 wandb.enabled=false
+
+This keeps experiments consistent and easy to reproduce.
 
 ### Question 13
 
@@ -306,7 +310,27 @@ To reproduce an experiment, one would need to retrieve the corresponding Hydra c
 >
 > Answer:
 
---- question 14 fill here ---
+![W&B runs overview](figures/runs.png)
+*Figure 1: W&B runs table showing multiple experiments with different outcomes and settings. This gives a quick
+overview of completed vs failed runs and helps compare runtime, dataset, and augmentation settings across runs.*
+
+![Training loss curve](figures/train_loss.png)
+*Figure 2: Training epoch loss decreases steadily, indicating the model is learning and the optimizer is converging.*
+
+![Validation accuracy and loss](figures/val.png)
+*Figure 3: Validation accuracy fluctuates around the low-to-high 0.8 range while validation loss trends downward with
+some noise, which is typical for small validation sets and indicates generalization performance.*
+
+Answer:
+We track three main types of signals in W&B: training loss, validation accuracy, and validation loss. Training loss
+shows how well the model fits the training data and whether optimization is converging; in our runs it decreases
+steadily, which suggests stable learning. Validation accuracy is the primary metric for model quality on unseen data,
+and the plot shows it rising and stabilizing in the low-to-high 0.8 range, which indicates improving generalization.
+Validation loss complements accuracy by reflecting confidence and calibration; it trends downward but with some noise,
+which is expected for limited validation batches. Finally, the runs table provides an experiment overview with run
+status, runtime, and key settings, making it easy to compare configurations (e.g., data augmentation and batch size)
+and identify runs that failed or crashed. These metrics together let us verify convergence, detect overfitting, and
+select the most reliable checkpoint.
 
 ### Question 15
 
@@ -327,7 +351,8 @@ An example Dockerfile can be seen here: [train.dockerfile](https://github.com/ar
 
 When running into bugs during experiments, we primarily used **Python’s built-in debugger, `pdb`**, to step through the code and inspect the flow of execution. This allowed us to pause the program at specific points, examine variable values, and understand where the logic was failing. In addition, we frequently used **strategic print statements** to quickly check intermediate outputs and verify that data and model behavior matched our expectations. These combined methods were simple but effective for identifying issues in both data processing and model training.  
 
-We did not perform formal code profiling due to time constraints, so we cannot claim that the code is fully optimized. While the code generally runs efficiently for our datasets and experiments, there are likely areas for improvement in memory usage and runtime performance. We recognize that profiling and performance tuning are important, especially in larger-scale experiments, and would be necessary for production deployments or processing larger datasets.  
+We did not perform formal code profiling due to time constraints, so we cannot claim that the code is fully optimized. While the code generally runs efficiently for our datasets and experiments, there are likely areas for improvement in memory usage and runtime performance. We recognize that profiling and performance tuning are important, especially in larger-scale experiments, and would be necessary for production deployments or processing larger d* [ ] Use logging to log important events in your code (M14)
+atasets.  
 
 Overall, our debugging approach focused on **clarity, understanding, and incremental problem-solving**, rather than assuming the code was perfect.
 
@@ -404,7 +429,7 @@ Overall, our debugging approach focused on **clarity, understanding, and increme
 >
 > Answer:
 
---- question 22 fill here ---
+
 
 ## Deployment
 
@@ -435,7 +460,14 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 >
 > Answer:
 
---- question 24 fill here ---
+We deployed the API locally and prepared it for cloud deployment. Locally, we run the FastAPI service with Uvicorn as
+described in `README.md`, and it is accessible at `http://localhost:8000` with `/health` and `/predict` endpoints. We
+also provide a BentoML service for packaging and serving the model, which makes it easier to containerize and run in
+different environments. For cloud deployment, we build Docker images and deploy them to Cloud Run with environment
+variables that enable GCS logging for prediction logs. The API is invoked with a standard multipart upload:
+`curl -F "file=@/path/to/image.jpg" <service-url>/predict`. Every inference call logs a JSON record (local or GCS),
+which is then used by the drift monitoring service. All runnable commands and configuration details are documented in
+`README.md`.
 
 ### Question 25
 
@@ -449,8 +481,13 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 > *before the service crashed.*
 >
 > Answer:
-
---- question 25 fill here ---
+We performed unit testing using `pytest`, with tests in `tests/` covering core functionality such as data handling and
+basic API behavior. These are executed locally with `uv run pytest tests/` and also run in CI to ensure consistent
+behavior across environments. We also ran a Locust load test against the local API (`http://127.0.0.1:8000`) with a
+single user. The run completed with 0 percent failures. The `/health` endpoint had a median latency around 5 ms
+(average ~5 ms), while `/predict` had a median latency around 430 ms (average ~595 ms) with a 95th percentile around
+1.7 s. Overall throughput was ~0.6 requests per second in this single-user configuration. These results show that the
+API is responsive for health checks and that inference latency is dominated by model execution, which is expected.
 
 ### Question 26
 
@@ -464,8 +501,12 @@ To launch the service, we provide a **CLI command using Typer** that runs the Fa
 > *measure ... and ... that would inform us about this ... behaviour of our application.*
 >
 > Answer:
-
---- question 26 fill here ---
+Yes, we implemented monitoring via prediction logging and a drift detection service. Each `/predict` call logs a JSON
+record containing the prediction, confidence, and extracted features. The drift API reads recent prediction logs and
+compares them against a reference dataset (the training images) using Evidently metrics. This produces a drift report
+in HTML/JSON and a summary indicating whether dataset drift is detected. The service can run locally or in the cloud
+with GCS-backed logs and reference images. This monitoring helps detect data distribution shifts early, which is
+critical for maintaining model performance over time and deciding when retraining is needed. The GCS loggs can be buggy and dont work perfectly - this is not a finished product.
 
 ## Overall discussion of project
 
@@ -500,7 +541,7 @@ In total we used 34$ as a group and most of it was spent on the cloud runs and d
 >
 > Answer:
 
-We implemeted a frontend because it made it easier to navigate the inference of the model and allowed a preview of the data.
+We implemeted a frontend because it made it easier to navigate the inference of the model and allowed a preview of the data. It was also fairly simple to do due to some previous experience in that area.
 
 
 ### Question 29
@@ -518,7 +559,24 @@ We implemeted a frontend because it made it easier to navigate the inference of 
 >
 > Answer:
 
---- question 29 fill here ---
+![System architecture](figures/overview.jpeg)
+
+The architecture starts with local development, where we train and evaluate the PyTorch model on a workstation. The
+training process produces a model checkpoint, which is the serialized state of the trained model. This checkpoint is
+packaged into a Docker image using our Dockerfiles, including all dependencies, preprocessing steps, and configuration
+needed to run inference. The image is then pushed to a container registry, making it portable and ready for deployment.
+
+The Docker image is deployed to Google Cloud Run, a fully managed serverless platform. Inside Cloud Run, we host two
+main services: (1) the inference API that exposes endpoints for predicting labels from new images, and (2) the drift
+API that monitors data drift by comparing incoming data with reference training images. Users or a Django frontend can
+send requests to the inference API. Prediction logs and evaluation outputs are stored in a GCP bucket for persistence
+and monitoring, and the drift service reads these logs to generate reports.
+
+The system is designed for reproducibility and scalability. Reference images for drift monitoring are stored in GCS and
+downloaded by the drift service when needed, allowing continuous checks for shifts in input distributions. By combining
+Docker, Cloud Run, PyTorch, and Evidently, the architecture ensures that training, deployment, inference, and
+monitoring are standardized and maintainable. Overall, the figure illustrates a CI/CD style workflow, moving from local
+development through containerization and deployment to production inference and monitoring.
 
 ### Question 30
 
@@ -535,7 +593,6 @@ We implemeted a frontend because it made it easier to navigate the inference of 
 There was a lot of issues with the GPC functionality, due to the lack of logging and high complexity of some tasks. There were issues with the merges as many overlapped and it happened that multple times we had to solve many conflicts which would sometimes break the code. Wandb also created some issues when using the artifacts to load the model checkpoint and generally as not everyone could access and gain the permissions to the data there. Permissions were generally a big issue also in GCP since some team members couldnt be granted access to the bucket needed. 
 
 When images are built on the cloud or using the docker image, it takes a lot of memmory and time so it was very hard to debug the issues and keep focus on such tasks.
---- question 30 fill here ---
 
 ### Question 31
 
@@ -553,6 +610,6 @@ When images are built on the cloud or using the docker image, it takes a lot of 
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
-Student s252552 has focused mostly on oranizational stuff and docker images and the report. He also created and took care of the repository structure. Student s254629 created the CLI, helped with the dv and created the monitoring. Student s253470 oversaw most of the GCP cloud operations and created the hydra configurations. He also created the dataloader for the initial machine learning model. Student s253819 oversaw the api processes and created the machine learning model training and evaluation scripts, connected initially with wandb and created the version control setups. He also focused on the drif detection algorithms.
+Student s252552 has focused mostly on oranizational stuff and docker images and the report. He also created and took care of the repository structure. Student s254629 created the CLI, helped with the dv and created the monitoring. Student s253470 oversaw most of the GCP cloud operations and created the hydra configurations. He also created the dataloader  and dvc for the initial machine learning model. Student s253819 oversaw the api processes and created the machine learning model training and evaluation scripts, connected initially with wandb and created the version control setups. He also focused on the drif detection algorithms.
 
 We all used generative AI in the shapes of codex and or ChatGPT/Gemini. It was mostly used for improving the code readibility and if someone was stuck at a task.
