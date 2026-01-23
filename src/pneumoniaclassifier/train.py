@@ -89,6 +89,7 @@ class WandbConfig:
     run_name: str | None = None
     log_model: bool = False
     model_name: str = "model1"
+    artifact_target_path: str | None = None
 
 
 @dataclass
@@ -134,13 +135,20 @@ def _init_wandb(config: TrainConfig) -> None:
     )
 
 
-def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool, model_name: str) -> None:
+def _save_checkpoint(
+    model: nn.Module,
+    checkpoint_path: Path,
+    save_wandb: bool,
+    model_name: str,
+    artifact_target_path: str | None,
+) -> None:
     """Save the model state dict to a checkpoint path.
 
     Args:
         model: Trained model to persist.
         checkpoint_path: Destination path for the checkpoint.
         save_wandb: Whether to save the checkpoint as a wandb artifact.
+        artifact_target_path: Optional W&B registry target path for linking the artifact.
     """
 
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
@@ -152,7 +160,12 @@ def _save_checkpoint(model: nn.Module, checkpoint_path: Path, save_wandb: bool, 
         artifact = wandb.Artifact(name=model_name, type="model")
         artifact.add_file(str(checkpoint_path))
         wandb.run.log_artifact(artifact)
-        wandb.run.link_artifact(artifact=artifact, target_path="s253819-danmarks-tekniske-universitet-dtu-org/wandb-registry-pneumonia_models/models", aliases=["latest", "code"])
+        if artifact_target_path:
+            wandb.run.link_artifact(
+                artifact=artifact,
+                target_path=artifact_target_path,
+                aliases=["latest", "code"],
+            )
 
 
 def train_epoch(
@@ -309,7 +322,13 @@ def train(cfg: DictConfig) -> None:
         )
 
     if cfg.train.save_checkpoint:
-        _save_checkpoint(model, Path(cfg.train.checkpoint_path), cfg.wandb.enabled, cfg.wandb.model_name)
+        _save_checkpoint(
+            model,
+            Path(cfg.train.checkpoint_path),
+            cfg.wandb.enabled,
+            cfg.wandb.model_name,
+            cfg.wandb.artifact_target_path,
+        )
 
 
 if __name__ == "__main__":
