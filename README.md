@@ -14,7 +14,6 @@ Frontend (Django) --> FastAPI Inference --> Prediction logs (local or GCS)
                      Reference images (train set)
 ```
 
-![MLOps pipeline overview](reports/figures/framework_overview.png)
 
 ## Framework map
 

@@ -1,3 +1,0 @@
-Method,Name,Error,Occurrences
-POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",92
-GET,/health,"ConnectionRefusedError(111, 'Connection refused')",25
