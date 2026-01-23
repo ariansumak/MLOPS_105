@@ -26,7 +26,7 @@ from pneumoniaclassifier.data_drift import _build_dataset
 def _get_bucket_name() -> str | None:
     """Return the configured GCS bucket name."""
 
-    return os.getenv("PNEUMONIA_GCS_BUCKET")
+    return os.getenv("  ")
 
 
 def _get_prefix() -> str:
@@ -60,6 +60,24 @@ def _get_report_dir() -> Path:
     return Path(os.getenv("PNEUMONIA_REPORT_DIR", "reports/drift_monitor"))
 
 
+def _get_reference_bucket() -> str | None:
+    """Return the GCS bucket that stores the reference dataset."""
+
+    return os.getenv("PNEUMONIA_REFERENCE_GCS_BUCKET")
+
+
+def _get_reference_prefix() -> str:
+    """Return the GCS prefix for the reference dataset."""
+
+    return os.getenv("PNEUMONIA_REFERENCE_GCS_PREFIX", "")
+
+
+def _should_refresh_reference() -> bool:
+    """Return whether reference data should be re-downloaded."""
+
+    return os.getenv("PNEUMONIA_REFERENCE_REFRESH", "false").lower() == "true"
+
+
 def _get_image_size() -> int:
     """Return the image size used for feature extraction."""
 
@@ -82,6 +100,35 @@ def _load_gcs_logs(bucket_name: str, prefix: str, limit: int) -> list[dict[str, 
         payload = blob.download_as_text()
         records.append(json.loads(payload))
     return records
+
+
+def _download_reference_from_gcs(reference_dir: Path) -> None:
+    """Download reference data from GCS into the local reference directory."""
+
+    bucket_name = _get_reference_bucket()
+    if not bucket_name:
+        return
+    if storage is None:
+        raise ImportError(
+            "google-cloud-storage is required for GCS logging. "
+            "Install with `uv add google-cloud-storage`."
+        )
+
+    reference_dir.mkdir(parents=True, exist_ok=True)
+    if any(reference_dir.iterdir()) and not _should_refresh_reference():
+        return
+
+    client = storage.Client()
+    prefix = _get_reference_prefix()
+    blobs = list(client.list_blobs(bucket_name, prefix=prefix))
+    for blob in blobs:
+        if blob.name.endswith("/"):
+            continue
+        relative_path = blob.name[len(prefix) :] if prefix else blob.name
+        relative_path = relative_path.lstrip("/")
+        local_path = reference_dir / relative_path
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        blob.download_to_filename(str(local_path))
 
 
 def _load_local_logs(log_dir: Path, limit: int) -> list[dict[str, Any]]:
@@ -164,6 +211,12 @@ def create_app() -> FastAPI:
     """Create the drift monitoring API."""
 
     app = FastAPI(title="Pneumonia Drift Monitor", version="0.1.0")
+
+    @app.on_event("startup")
+    def startup() -> None:
+        """Ensure reference data is available locally."""
+
+        _download_reference_from_gcs(_get_reference_dir())
 
     @app.get("/health")
     def health() -> dict[str, str]:
