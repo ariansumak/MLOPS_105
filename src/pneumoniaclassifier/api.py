@@ -189,8 +189,6 @@ def create_app() -> FastAPI:
 
         INFERENCE_LATENCY.observe(time.time() - start_time)
 
-
-
         label, confidence, probabilities = predict_image(
             image=image,
             model=app.state.model,
